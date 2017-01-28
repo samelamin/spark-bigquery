@@ -1,0 +1,28 @@
+*.class
+
+# OS generated files #
+######################
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Icon?
+ehthumbs.db
+Thumbs.db
+
+# eclipse project files
+**/.classpath
+**/.project
+**/.settings/
+.project
+.settings/
+
+# intelliJ IDEA project files
+.idea/
+*.iml
+
+# maven target files
+target/
+**/target/
+

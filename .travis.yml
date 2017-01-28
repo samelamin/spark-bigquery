@@ -1,0 +1,17 @@
+language: scala
+scala:
+  - 2.10.6
+  - 2.11.8
+jdk: oraclejdk8
+
+cache:
+  directories:
+    - $HOME/.sbt/boot
+    - $HOME/.ivy2/cache
+
+  script:
+    - sbt ++$TRAVIS_SCALA_VERSION clean scalastyle test
+
+  notifications:
+    email:
+      - hussam.elamin@gmail.com
