@@ -74,6 +74,7 @@ sqlContext.setBigQueryDatasetLocation("<DATASET_LOCATION>")
 
 ### Structured Streaming from S3/HDFS to BigQuery
 
+S3 and HDFS are the defacto technology for storage in the cloud, this package allows you to stream any data added to a Big Query Table of your choice
 ```scala
 import com.samelamin.spark.bigquery._
 
