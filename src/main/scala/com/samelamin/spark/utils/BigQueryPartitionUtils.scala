@@ -10,7 +10,7 @@ import org.slf4j.{Logger, LoggerFactory}
 import scala.util.control.NonFatal
 
 /**
-  * Created by root on 1/9/17.
+  * Createdby sam elamin on 1/9/17.
   */
 object BigQueryPartitionUtils {
   private val logger = LogManager.getRootLogger()

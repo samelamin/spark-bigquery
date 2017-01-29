@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory
 import scala.util.Random
 
 /**
-  * Created by root on 28/01/2017.
+  * Createdby sam elamin on 28/01/2017.
   */
 package object spark {
   implicit def toDataFrameWriterFunctions(dfw: DataFrameWriter[Row]): DataFrameWriterFunctions =

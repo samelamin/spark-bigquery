@@ -14,7 +14,7 @@ import org.mockito.Mockito._
 import org.scalatest.FeatureSpec
 import org.scalatest.mock.MockitoSugar
 /**
-  * Created by root on 1/12/17.
+  * Createdby sam elamin on 1/12/17.
   */
 class BigQueryClientSpecs extends FeatureSpec with DataFrameSuiteBase with MockitoSugar {
   val BQProjectId = "google.com:foo-project"

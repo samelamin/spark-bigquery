@@ -20,15 +20,9 @@ import org.apache.spark.sql.{DataFrameWriter, Row}
 class DataFrameWriterFunctions(@transient val dfw: DataFrameWriter[Row]) extends Serializable {
 
   /**
-    * The classpath to the default source (which in turn results in a N1QLRelation)
+    * The classpath to the default source
     */
   private val source = "com.samelamin.spark.bigquery.DefaultSource"
-
-  /**
-    * Stores the current DataFrame in the only open bucket.
-    */
-  def bigquery(options: Map[String, String] = null): Unit = writeFrame(options)
-
   /**
     * Helper method to write the current DataFrame to bigquery.
     */

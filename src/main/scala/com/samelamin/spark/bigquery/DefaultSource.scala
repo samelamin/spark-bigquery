@@ -22,7 +22,7 @@ import org.apache.spark.sql.sources._
 import org.apache.spark.sql.streaming.OutputMode
 
 /**
-  * The default couchbase source for Spark SQL.
+  * The default source for Spark SQL.
   */
 class DefaultSource
   extends StreamSinkProvider{
