@@ -112,8 +112,8 @@ class BigQueryClient(sqlContext: SQLContext, var bigquery: Bigquery = null) exte
     val tableReference = queryCache.get(sqlQuery)
     val fullyQualifiedInputTableId = BigQueryStrings.toString(tableReference)
     BigQueryConfiguration.configureBigQueryInput(hadoopConf, fullyQualifiedInputTableId)
-
   }
+
   private val queryCache: LoadingCache[String, TableReference] =
     CacheBuilder.newBuilder()
       .expireAfterWrite(STAGING_DATASET_TABLE_EXPIRATION_MS, TimeUnit.MILLISECONDS)

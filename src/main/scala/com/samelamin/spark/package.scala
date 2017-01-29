@@ -1,11 +1,12 @@
 package com.samelamin
 import com.google.api.services.bigquery.model.TableReference
-import com.google.cloud.hadoop.io.bigquery.{BigQueryConfiguration, BigQueryOutputFormat, BigQueryStrings, GsonBigQueryInputFormat}
+import com.google.cloud.hadoop.io.bigquery._
 import com.google.gson.{JsonObject, JsonParser}
 import com.samelamin.spark.bigquery._
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.hadoop.io.{LongWritable, NullWritable}
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat
+import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.{DataFrame, DataFrameWriter, Row, SQLContext}
 import org.slf4j.LoggerFactory
 
@@ -82,6 +83,32 @@ package object spark {
 
       val df = sqlContext.read.json(tableData)
       df
+    }
+
+
+    def bigQueryTable(tableSpec: String): DataFrame = {
+      bigQueryTable(BigQueryStrings.parseTableReference(tableSpec))
+    }
+
+    def bigQueryTable(tableRef: TableReference): DataFrame = {
+      BigQueryConfiguration.configureBigQueryInput(
+        hadoopConf, tableRef.getProjectId, tableRef.getDatasetId, tableRef.getTableId)
+      val df:DataFrame = null
+      df
+//
+//      val fClass = classOf[AvroBigQueryInputFormat]
+//      val kClass = classOf[LongWritable]
+//      val vClass = classOf[GenericData.Record]
+//      val rdd = sc
+//        .newAPIHadoopRDD(conf, fClass, kClass, vClass)
+//        .map(_._2)
+//      val schemaString = rdd.map(_.getSchema.toString).first()
+//      val schema = new Schema.Parser().parse(schemaString)
+//
+//      val structType = SchemaConverters.toSqlType(schema).dataType.asInstanceOf[StructType]
+//      val converter = SchemaConverters.createConverterToSQL(schema)
+//        .asInstanceOf[GenericData.Record => Row]
+//      self.createDataFrame(rdd.map(converter), structType)
     }
   }
   implicit class BigQueryDataFrame(self: DataFrame) extends Serializable {

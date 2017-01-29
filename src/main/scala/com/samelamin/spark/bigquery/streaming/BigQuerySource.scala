@@ -1,26 +1,29 @@
 package com.samelamin.spark.bigquery.streaming
 
-import com.google.api.services.bigquery.model.TableReference
-import com.google.cloud.hadoop.io.bigquery.{AbstractBigQueryInputFormat, BigQueryStrings}
+import com.google.cloud.hadoop.io.bigquery.BigQueryStrings
+import com.samelamin.spark.bigquery.{BigQueryClient, DefaultSource}
 import org.apache.spark.sql.{DataFrame, SQLContext}
-import org.apache.spark.sql.execution.streaming.{Offset, Source}
-import org.apache.spark.sql.types.StructType
-
+import org.apache.spark.sql.execution.streaming.{CompositeOffset, Offset, Source}
+import org.apache.spark.sql.types.{BinaryType, StringType, StructField, StructType}
+import com.samelamin.spark._
+import org.slf4j.LoggerFactory
 /**
   * Created by samelamin on 29/01/2017.
   */
   class BigQuerySource(sqlContext: SQLContext, user_schema: Option[StructType],
                        options: Map[String, String]) extends Source {
   val hadoopConfiguration = sqlContext.sparkContext.hadoopConfiguration
+  private val logger = LoggerFactory.getLogger(classOf[BigQuerySource])
 
   /** Returns the schema of the data from this source */
   def schema: StructType = {
     null
   }
 
-  /** Returns the maximum available offset for this source. */
-  def getOffset: Option[Offset] = {
-    null
+  /** Returns the maximum available o ffset for this source. */
+  override def getOffset: Option[PartitionOffset] = {
+    val last_modified_time = 1485727760120l
+    Some(new PartitionOffset(0,last_modified_time))
   }
 
   /**
@@ -30,32 +33,46 @@ import org.apache.spark.sql.types.StructType
     */
   override def getBatch(start: Option[Offset], end: Offset): DataFrame = {
     val fullyQualifiedOutputTableId = options.get("tableSpec").get
+    logger.warn(s"fully qualified table name is $fullyQualifiedOutputTableId")
+    logger.warn(s"offset is $end")
 
-    bigQueryTable(BigQueryStrings.parseTableReference(fullyQualifiedOutputTableId))
+    val test = end.asInstanceOf[PartitionOffset]
+    logger.warn(s"offset mapped is is $test")
+
+
+    val last_modified_date = test.seqno
+
+    logger.warn(s"last modified date is $last_modified_date")
+
+
+      val query = s"""SELECT
+                        customerid
+                      FROM
+                        [je-bi-datalake:test.test_2]
+                      WHERE
+                        _PARTITIONTIME BETWEEN 0
+                        AND DATE_ADD(current_timestamp(), -1, "MINUTE");"""
+
+    val df = sqlContext.bigQuerySelect(query)
+    df
    }
 
-  def bigQueryTable(tableRef: TableReference): DataFrame = {
+  override def stop(): Unit = {
 
-    hadoopConfiguration.setClass(
-      AbstractBigQueryInputFormat.INPUT_FORMAT_CLASS_KEY,
-      classOf[AvroBigQueryInputFormat], classOf[InputFormat[LongWritable, GenericData.Record]])
-
-    BigQueryConfiguration.configureBigQueryInput(
-      conf, tableRef.getProjectId, tableRef.getDatasetId, tableRef.getTableId)
-
-    val fClass = classOf[AvroBigQueryInputFormat]
-    val kClass = classOf[LongWritable]
-    val vClass = classOf[GenericData.Record]
-    val rdd = sc
-      .newAPIHadoopRDD(conf, fClass, kClass, vClass)
-      .map(_._2)
-    val schemaString = rdd.map(_.getSchema.toString).first()
-    val schema = new Schema.Parser().parse(schemaString)
-
-    val structType = SchemaConverters.toSqlType(schema).dataType.asInstanceOf[StructType]
-    val converter = SchemaConverters.createConverterToSQL(schema)
-      .asInstanceOf[GenericData.Record => Row]
-    self.createDataFrame(rdd.map(converter), structType)
   }
 }
 
+object BigQuerySource {
+  val DEFAULT_SCHEMA = StructType(
+    StructField(DefaultSource.DEFAULT_DOCUMENT_ID_FIELD, StringType) ::
+      StructField("value", BinaryType) :: Nil
+  )
+}
+
+class PartitionOffset(val vbid: Short, val seqno: Long) extends Offset {
+  override def compareTo(other: Offset): Int = other match {
+    case l: PartitionOffset => seqno.compareTo(l.seqno)
+    case _ =>
+      throw new IllegalArgumentException(s"Invalid comparison of $getClass with ${other.getClass}")
+  }
+}
