@@ -48,7 +48,7 @@ The project was inspired by [spotify/spark-bigquery](https://github.com/spotify/
 
 <dependencies>
   <dependency>
-    <groupId>com.samelamin</groupId>
+    <groupId>com.github.samelamin</groupId>
     <artifactId>spark-bigquery_${scala.binary.version}</artifactId>
     <version>0.1.0</version>
   </dependency>
@@ -61,7 +61,7 @@ To use it in a local SBT console first add the package as a dependency then set 
 ```sbt
 resolvers += Opts.resolver.sonatypeSnapshots
 
-libraryDependencies += "com.samelamin" %% "spark-bigquery" % "0.1.0"
+libraryDependencies += "com.github.samelamin" %% "spark-bigquery" % "0.1.0"
 ```
 
 ```scala

@@ -16,7 +16,7 @@
  */
 
 name := "spark-bigquery"
-organization := "com.samelamin"
+organization := "com.github.samelamin"
 scalaVersion := "2.11.8"
 crossScalaVersions := Seq("2.10.6", "2.11.8")
 
