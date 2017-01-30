@@ -1,12 +1,16 @@
 package com.samelamin.spark.bigquery.streaming
 
+import java.util.concurrent.atomic.AtomicReference
+
 import com.google.cloud.hadoop.io.bigquery.BigQueryStrings
 import com.samelamin.spark.bigquery.{BigQueryClient, DefaultSource}
 import org.apache.spark.sql.{DataFrame, SQLContext}
-import org.apache.spark.sql.execution.streaming.{CompositeOffset, Offset, Source}
+import org.apache.spark.sql.execution.streaming._
 import org.apache.spark.sql.types.{BinaryType, StringType, StructField, StructType}
 import com.samelamin.spark._
 import org.slf4j.LoggerFactory
+
+import scala.collection.mutable.ArrayBuffer
 /**
   * Created by samelamin on 29/01/2017.
   */
@@ -14,16 +18,21 @@ import org.slf4j.LoggerFactory
                        options: Map[String, String]) extends Source {
   val hadoopConfiguration = sqlContext.sparkContext.hadoopConfiguration
   private val logger = LoggerFactory.getLogger(classOf[BigQuerySource])
-
+  var currentSchema:StructType = null
   /** Returns the schema of the data from this source */
   def schema: StructType = {
-    null
+    currentSchema
   }
-
-  /** Returns the maximum available o ffset for this source. */
-  override def getOffset: Option[PartitionOffset] = {
+  var currentOffset: Long = 0l
+  override def getOffset: Option[Offset] = {
     val last_modified_time = 1485727760120l
-    Some(new PartitionOffset(0,last_modified_time))
+    currentOffset = last_modified_time
+    logger.warn("current offset is 0")
+    if(currentOffset == 0l) {
+      None
+    } else {
+      Some(LongOffset(currentOffset))
+    }
   }
 
   /**
@@ -33,28 +42,28 @@ import org.slf4j.LoggerFactory
     */
   override def getBatch(start: Option[Offset], end: Offset): DataFrame = {
     val fullyQualifiedOutputTableId = options.get("tableSpec").get
-    logger.warn(s"fully qualified table name is $fullyQualifiedOutputTableId")
-    logger.warn(s"offset is $end")
+//    logger.warn(s"fully qualified table name is $fullyQualifiedOutputTableId")
+//      val query = """SELECT
+//                  last_modified_time AS last_modified,
+//                  FROM
+//                  [je-bi-datalake.test.test$__PARTITIONS_SUMMARY__]"""
+//
+//    val df = sqlContext.bigQuerySelect(query)
+//    currentSchema = df.schema
+//
+//    df
+    val startIndex = start.getOrElse(LongOffset(0L)).asInstanceOf[LongOffset].offset.toInt
+    val endIndex = currentOffset
+    val data: ArrayBuffer[(String, Long)] = ArrayBuffer.empty
+    // Move consumed messages to persistent store.
+    (startIndex + 1 to 100).foreach { id =>
+      val element: (String, Long) = ("blag",currentOffset)
+      data += element
 
-    val test = end.asInstanceOf[PartitionOffset]
-    logger.warn(s"offset mapped is is $test")
-
-
-    val last_modified_date = test.seqno
-
-    logger.warn(s"last modified date is $last_modified_date")
-
-
-      val query = s"""SELECT
-                        customerid
-                      FROM
-                        [je-bi-datalake:test.test_2]
-                      WHERE
-                        _PARTITIONTIME BETWEEN 0
-                        AND DATE_ADD(current_timestamp(), -1, "MINUTE");"""
-
-    val df = sqlContext.bigQuerySelect(query)
-    df
+    }
+    logger.trace(s"Get Batch invoked, ${data.mkString}")
+    import sqlContext.implicits._
+    data.toDF("value", "timestamp")
    }
 
   override def stop(): Unit = {
@@ -67,12 +76,4 @@ object BigQuerySource {
     StructField(DefaultSource.DEFAULT_DOCUMENT_ID_FIELD, StringType) ::
       StructField("value", BinaryType) :: Nil
   )
-}
-
-class PartitionOffset(val vbid: Short, val seqno: Long) extends Offset {
-  override def compareTo(other: Offset): Int = other match {
-    case l: PartitionOffset => seqno.compareTo(l.seqno)
-    case _ =>
-      throw new IllegalArgumentException(s"Invalid comparison of $getClass with ${other.getClass}")
-  }
 }

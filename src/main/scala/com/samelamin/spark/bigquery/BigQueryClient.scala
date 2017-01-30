@@ -1,5 +1,4 @@
 package com.samelamin.spark.bigquery
-
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 
@@ -14,6 +13,7 @@ import com.google.api.services.bigquery.model.{Dataset => BQDataset}
 import com.google.cloud.hadoop.io.bigquery._
 import com.google.common.cache.{CacheBuilder, CacheLoader, LoadingCache}
 import com.google.gson.JsonParser
+import com.samelamin.spark.{CreateDisposition, WriteDisposition}
 import org.apache.hadoop.util.Progressable
 import org.apache.spark.sql._
 
@@ -87,7 +87,6 @@ class BigQueryClient(sqlContext: SQLContext, var bigquery: Bigquery = null) exte
       .setSourceUris(List(gcsPath + "/*").asJava)
 
     if(allow_schema_updates) {
-      logger.warn("updating schema update options")
       loadConfig.setSchemaUpdateOptions(List("ALLOW_FIELD_ADDITION", "ALLOW_FIELD_RELAXATION").asJava)
     }
 
@@ -112,8 +111,8 @@ class BigQueryClient(sqlContext: SQLContext, var bigquery: Bigquery = null) exte
     val tableReference = queryCache.get(sqlQuery)
     val fullyQualifiedInputTableId = BigQueryStrings.toString(tableReference)
     BigQueryConfiguration.configureBigQueryInput(hadoopConf, fullyQualifiedInputTableId)
-  }
 
+  }
   private val queryCache: LoadingCache[String, TableReference] =
     CacheBuilder.newBuilder()
       .expireAfterWrite(STAGING_DATASET_TABLE_EXPIRATION_MS, TimeUnit.MILLISECONDS)
@@ -195,13 +194,5 @@ class BigQueryClient(sqlContext: SQLContext, var bigquery: Bigquery = null) exte
     val fullJobId = projectId + "-" + UUID.randomUUID().toString
     new JobReference().setProjectId(projectId).setJobId(fullJobId)
   }
-}
 
-object CreateDisposition extends Enumeration {
-  val CREATE_IF_NEEDED, CREATE_NEVER = Value
 }
-
-object WriteDisposition extends Enumeration {
-  val WRITE_TRUNCATE, WRITE_APPEND, WRITE_EMPTY = Value
-}
-
