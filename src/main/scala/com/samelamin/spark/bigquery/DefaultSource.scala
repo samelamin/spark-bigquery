@@ -38,8 +38,7 @@ class DefaultSource
 
   }
 
-  override def sourceSchema(
-                             sqlContext: SQLContext,
+  override def sourceSchema(sqlContext: SQLContext,
                              schema: Option[StructType],
                              providerName: String,
                              options: Map[String, String]): (String, StructType) = {

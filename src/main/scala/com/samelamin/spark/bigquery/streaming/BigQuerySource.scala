@@ -23,17 +23,16 @@ import scala.collection.mutable.ArrayBuffer
   override def schema: StructType = {
     currentSchema
   }
-  var currentOffset: Long = 0l
+  var currentOffset = 0l
   override def getOffset: Option[Offset] = {
-    val last_modified_time = 10l
-
-    logger.warn(s"current offset is $currentOffset")
-    if(currentOffset == 0l) {
-      currentOffset = last_modified_time
+    logger.warn(s"******************** Current offset is set to $currentOffset")
+    if (currentOffset == 0l) {
+      currentOffset += 1l
+      None
+    } else {
+      currentOffset += 1l
+      Some(LongOffset(currentOffset))
     }
-
-    Some(LongOffset(currentOffset))
-
   }
 
   /**
@@ -42,20 +41,14 @@ import scala.collection.mutable.ArrayBuffer
     * same data for a particular `start` and `end` pair.
     */
   override def getBatch(start: Option[Offset], end: Offset): DataFrame = {
-    val fullyQualifiedOutputTableId = options.get("tableSpec").get
-    logger.warn(s"******* table spec is $fullyQualifiedOutputTableId")
-    logger.warn(s"fully qualified table name is $fullyQualifiedOutputTableId")
-    val query = s"""SELECT
-                  *
-                  FROM
-                  $fullyQualifiedOutputTableId"""
-    currentOffset += 10l
-    val df = sqlContext.bigQuerySelect(query)
-    currentSchema = df.schema
-    schema
-    logger.warn("********** new schema set in get batch is ")
-    logger.warn(currentSchema.toString())
-    df
+    val data: ArrayBuffer[(String, Long, String)] = ArrayBuffer.empty
+    // Move consumed messages to persistent store.
+    (1 to 2).foreach { id =>
+      val element = ("blag",1l, "test")
+      data += element
+    }
+    import sqlContext.implicits._
+    data.toDF("value", "timestamp", "tester")
   }
 
   override def stop(): Unit = {
