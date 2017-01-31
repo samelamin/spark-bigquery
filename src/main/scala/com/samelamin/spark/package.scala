@@ -31,6 +31,10 @@ package object spark {
       hadoopConf.set(bq.ALLOW_SCHEMA_UPDATES, value.toString)
     }
 
+    def useStandardSQLDialect(value: Boolean = true): Unit = {
+      hadoopConf.set(bq.USE_STANDARD_SQL_DIALECT, value.toString)
+    }
+
     /**
       * Set GCP project ID for BigQuery.
       */

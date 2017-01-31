@@ -61,6 +61,7 @@ class BigQueryClient(sqlContext: SQLContext, var bigquery: Bigquery = null) exte
   val STAGING_DATASET_DESCRIPTION = "Spark BigQuery staging dataset"
   val DEFAULT_TABLE_EXPIRATION_MS = 259200000L
   val ALLOW_SCHEMA_UPDATES = "ALLOW_SCHEMA_UPDATES"
+  val USE_STANDARD_SQL_DIALECT = "USE_STANDARD_SQL_DIALECT"
   private val logger = LoggerFactory.getLogger(classOf[BigQueryClient])
   private def projectId = hadoopConf.get(BigQueryConfiguration.PROJECT_ID_KEY)
   private def inConsole = Thread.currentThread().getStackTrace.exists(
@@ -89,7 +90,6 @@ class BigQueryClient(sqlContext: SQLContext, var bigquery: Bigquery = null) exte
     if(allow_schema_updates) {
       loadConfig.setSchemaUpdateOptions(List("ALLOW_FIELD_ADDITION", "ALLOW_FIELD_RELAXATION").asJava)
     }
-
     if (writeDisposition != null) {
       loadConfig = loadConfig.setWriteDisposition(writeDisposition.toString)
     }
@@ -123,7 +123,10 @@ class BigQueryClient(sqlContext: SQLContext, var bigquery: Bigquery = null) exte
         val location = hadoopConf.get(STAGING_DATASET_LOCATION, STAGING_DATASET_LOCATION_DEFAULT)
         val destinationTable = temporaryTable(location)
         logger.info(s"Destination table: $destinationTable")
-        val job = createQueryJob(sqlQuery, destinationTable, dryRun = false)
+        val use_legacy_sql = !hadoopConf.get(USE_STANDARD_SQL_DIALECT,"true").toBoolean
+
+        val job = createQueryJob(sqlQuery, destinationTable, dryRun = false,use_legacy_sql)
+
         waitForJob(job)
         destinationTable
       }
@@ -172,12 +175,14 @@ class BigQueryClient(sqlContext: SQLContext, var bigquery: Bigquery = null) exte
 
   private def createQueryJob(sqlQuery: String,
                              destinationTable: TableReference,
-                             dryRun: Boolean): Job = {
+                             dryRun: Boolean,use_legacy_sql: Boolean = false): Job = {
     var queryConfig = new JobConfigurationQuery()
       .setQuery(sqlQuery)
       .setPriority(PRIORITY)
       .setCreateDisposition("CREATE_IF_NEEDED")
       .setWriteDisposition("WRITE_EMPTY")
+    queryConfig.setUseLegacySql(use_legacy_sql)
+
     if (destinationTable != null) {
       queryConfig = queryConfig
         .setDestinationTable(destinationTable)

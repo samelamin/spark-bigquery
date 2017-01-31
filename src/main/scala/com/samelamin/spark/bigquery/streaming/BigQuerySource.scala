@@ -20,19 +20,20 @@ import scala.collection.mutable.ArrayBuffer
   private val logger = LoggerFactory.getLogger(classOf[BigQuerySource])
   var currentSchema:StructType = null
   /** Returns the schema of the data from this source */
-  def schema: StructType = {
+  override def schema: StructType = {
     currentSchema
   }
   var currentOffset: Long = 0l
   override def getOffset: Option[Offset] = {
-    val last_modified_time = 1485727760120l
-    currentOffset = last_modified_time
-    logger.warn("current offset is 0")
+    val last_modified_time = 10l
+
+    logger.warn(s"current offset is $currentOffset")
     if(currentOffset == 0l) {
-      None
-    } else {
-      Some(LongOffset(currentOffset))
+      currentOffset = last_modified_time
     }
+
+    Some(LongOffset(currentOffset))
+
   }
 
   /**
@@ -42,29 +43,20 @@ import scala.collection.mutable.ArrayBuffer
     */
   override def getBatch(start: Option[Offset], end: Offset): DataFrame = {
     val fullyQualifiedOutputTableId = options.get("tableSpec").get
-//    logger.warn(s"fully qualified table name is $fullyQualifiedOutputTableId")
-//      val query = """SELECT
-//                  last_modified_time AS last_modified,
-//                  FROM
-//                  [je-bi-datalake.test.test$__PARTITIONS_SUMMARY__]"""
-//
-//    val df = sqlContext.bigQuerySelect(query)
-//    currentSchema = df.schema
-//
-//    df
-    val startIndex = start.getOrElse(LongOffset(0L)).asInstanceOf[LongOffset].offset.toInt
-    val endIndex = currentOffset
-    val data: ArrayBuffer[(String, Long)] = ArrayBuffer.empty
-    // Move consumed messages to persistent store.
-    (startIndex + 1 to 100).foreach { id =>
-      val element: (String, Long) = ("blag",currentOffset)
-      data += element
-
-    }
-    logger.trace(s"Get Batch invoked, ${data.mkString}")
-    import sqlContext.implicits._
-    data.toDF("value", "timestamp")
-   }
+    logger.warn(s"******* table spec is $fullyQualifiedOutputTableId")
+    logger.warn(s"fully qualified table name is $fullyQualifiedOutputTableId")
+    val query = s"""SELECT
+                  *
+                  FROM
+                  $fullyQualifiedOutputTableId"""
+    currentOffset += 10l
+    val df = sqlContext.bigQuerySelect(query)
+    currentSchema = df.schema
+    schema
+    logger.warn("********** new schema set in get batch is ")
+    logger.warn(currentSchema.toString())
+    df
+  }
 
   override def stop(): Unit = {
 
