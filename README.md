@@ -39,7 +39,7 @@ The project was inspired by [spotify/spark-bigquery](https://github.com/spotify/
   <repository>
     <id>oss-sonatype</id>
     <name>oss-sonatype</name>
-    <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+    <url>https://oss.sonatype.org/content/repositories/releases/</url>
     <snapshots>
       <enabled>true</enabled>
     </snapshots>
@@ -59,7 +59,7 @@ The project was inspired by [spotify/spark-bigquery](https://github.com/spotify/
 
 To use it in a local SBT console first add the package as a dependency then set up your project details
 ```sbt
-resolvers += Opts.resolver.sonatypeSnapshots
+resolvers += Opts.resolver.sonatypeReleases
 
 libraryDependencies += "com.github.samelamin" %% "spark-bigquery" % "0.1.0"
 ```
