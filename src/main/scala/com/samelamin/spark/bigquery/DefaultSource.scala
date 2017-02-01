@@ -15,44 +15,43 @@
  */
 package com.samelamin.spark.bigquery
 
+import com.google.cloud.hadoop.io.bigquery.{BigQueryStrings}
 import com.samelamin.spark.bigquery.streaming.{BigQuerySink, BigQuerySource}
-import org.apache.spark.sql.SQLContext
-import org.apache.spark.sql.execution.streaming.{Sink, Source}
-import org.apache.spark.sql.sources._
-import org.apache.spark.sql.streaming.OutputMode
-import org.apache.spark.sql.types.{BinaryType, StringType, StructField, StructType}
 import org.apache.spark.sql.sources._
 import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.execution.streaming.{Sink, Source}
 import org.apache.spark.sql.streaming.OutputMode
-import org.apache.spark.sql.{DataFrame, SQLContext, SaveMode}
+import org.apache.spark.sql.SQLContext
+import org.slf4j.LoggerFactory
 /**
-  * The default source for Spark SQL.
+  * The default BigQuery source for Spark SQL.
   */
 class DefaultSource
   extends StreamSinkProvider
     with StreamSourceProvider {
+
   override def createSink(sqlContext: SQLContext, parameters: Map[String, String],
                           partitionColumns: Seq[String], outputMode: OutputMode): Sink = {
     new BigQuerySink(parameters)
 
   }
 
-  override def sourceSchema(sqlContext: SQLContext,
-                             schema: Option[StructType],
-                             providerName: String,
-                             options: Map[String, String]): (String, StructType) = {
-    ("bigquery", schema.getOrElse(BigQuerySource.DEFAULT_SCHEMA))
+  def createBigQueryClient(sqlContext: SQLContext): BigQueryClient = {
+    BigQueryClient.getInstance(sqlContext)
   }
 
+  override def sourceSchema(sqlContext: SQLContext,
+                            schema: Option[StructType],
+                            providerName: String,
+                            options: Map[String, String]): (String, StructType) = {
+    val bigQueryClient = createBigQueryClient(sqlContext)
+    val tableReference = BigQueryStrings.parseTableReference(options.get("tableReference").get)
+    val convertedSchema = DataFrameSchema(bigQueryClient.getTableSchema(tableReference))
+    ("bigquery", schema.getOrElse(convertedSchema))
+  }
 
   override def createSource(sqlContext: SQLContext, metadataPath: String,
                             schema: Option[StructType], providerName: String, parameters: Map[String, String]): Source = {
     new BigQuerySource(sqlContext, schema, parameters)
   }
-}
-object DefaultSource {
-  val DEFAULT_STREAM_FROM: String = "BEGINNING"
-  val DEFAULT_STREAM_TO: String = "INFINITY"
-  val DEFAULT_DOCUMENT_ID_FIELD: String = "META_ID"
 }

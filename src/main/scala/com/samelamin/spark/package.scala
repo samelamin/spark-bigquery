@@ -1,12 +1,14 @@
 package com.samelamin
+import java.math.BigInteger
+
 import com.google.api.services.bigquery.model.TableReference
 import com.google.cloud.hadoop.io.bigquery._
 import com.google.gson.{JsonObject, JsonParser}
-
 import com.samelamin.spark.bigquery._
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.hadoop.io.{LongWritable, NullWritable}
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat
+import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.{DataFrame, DataFrameWriter, Row, SQLContext}
 import org.slf4j.LoggerFactory
 
@@ -31,10 +33,12 @@ package object spark {
       hadoopConf.set(bq.ALLOW_SCHEMA_UPDATES, value.toString)
     }
 
+    /**
+      * Set whether to use the Standard SQL Dialect
+      */
     def useStandardSQLDialect(value: Boolean = true): Unit = {
       hadoopConf.set(bq.USE_STANDARD_SQL_DIALECT, value.toString)
     }
-
     /**
       * Set GCP project ID for BigQuery.
       */
@@ -87,6 +91,14 @@ package object spark {
 
       val df = sqlContext.read.json(tableData)
       df
+    }
+
+    def getLatestBQModifiedTime(tableReference: String): BigInteger = {
+      bq.getLatestModifiedTime(BigQueryStrings.parseTableReference(tableReference))
+    }
+
+    def getBigQuerySchema(tableReference: String): StructType = {
+      DataFrameSchema(bq.getTableSchema(BigQueryStrings.parseTableReference(tableReference)))
     }
   }
   implicit class BigQueryDataFrame(self: DataFrame) extends Serializable {

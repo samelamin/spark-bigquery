@@ -1,4 +1,5 @@
 package com.samelamin.spark.bigquery
+import java.math.BigInteger
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 
@@ -16,6 +17,7 @@ import com.google.gson.JsonParser
 import com.samelamin.spark.{CreateDisposition, WriteDisposition}
 import org.apache.hadoop.util.Progressable
 import org.apache.spark.sql._
+import org.apache.spark.sql.types.{DataType, StructType}
 
 import scala.collection.JavaConverters._
 import org.joda.time.Instant
@@ -181,6 +183,9 @@ class BigQueryClient(sqlContext: SQLContext, var bigquery: Bigquery = null) exte
       .setPriority(PRIORITY)
       .setCreateDisposition("CREATE_IF_NEEDED")
       .setWriteDisposition("WRITE_EMPTY")
+
+    logger.info(s"Using legacy Sql: $use_legacy_sql")
+
     queryConfig.setUseLegacySql(use_legacy_sql)
 
     if (destinationTable != null) {
@@ -198,6 +203,16 @@ class BigQueryClient(sqlContext: SQLContext, var bigquery: Bigquery = null) exte
   private def createJobReference(projectId: String, jobIdPrefix: String): JobReference = {
     val fullJobId = projectId + "-" + UUID.randomUUID().toString
     new JobReference().setProjectId(projectId).setJobId(fullJobId)
+  }
+
+  def getLatestModifiedTime(tableReference: TableReference): BigInteger = {
+    val table = bigquery.tables().get(tableReference.getProjectId,tableReference.getDatasetId,tableReference.getTableId).execute()
+    table.getLastModifiedTime()
+  }
+
+  def getTableSchema(tableReference: TableReference): TableSchema = {
+    val table = bigquery.tables().get(tableReference.getProjectId,tableReference.getDatasetId,tableReference.getTableId).execute()
+    table.getSchema()
   }
 
 }

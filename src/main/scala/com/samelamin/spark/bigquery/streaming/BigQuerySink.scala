@@ -13,7 +13,7 @@ import scala.util.Try
 class BigQuerySink(options: Map[String, String]) extends Sink with Serializable {
 
   override def addBatch(batchId: Long, data: DataFrame): Unit = {
-    val fullyQualifiedOutputTableId = options.get("tableSpec").get
+    val fullyQualifiedOutputTableId = options.get("tableReference").get
     val isPartitionByDay = Try(options.get("partitionByDay").get.toBoolean).getOrElse(false)
     data.saveAsBigQueryTable(fullyQualifiedOutputTableId,isPartitionByDay)
   }

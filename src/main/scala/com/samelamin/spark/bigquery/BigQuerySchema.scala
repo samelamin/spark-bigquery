@@ -17,11 +17,18 @@
 
 package com.samelamin.spark.bigquery
 
+import java.util.function.Consumer
+
+import com.google.api.services.bigquery.model.{TableFieldSchema, TableSchema}
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.types._
 import org.json4s.JsonAST.{JArray, JValue}
 import org.json4s.JsonDSL._
 import org.json4s.jackson.JsonMethods.{pretty, render}
+import org.slf4j.LoggerFactory
+
+import scala.collection.JavaConverters._
+import scala.collection.mutable
 
 /**
   * Builds BigQuery input JSON schema based on DataFrame.
@@ -75,5 +82,45 @@ object BigQuerySchema {
 
   def apply(df: DataFrame): String = {
     pretty(render(JArray(df.schema.fields.map(fieldToJson(_)).toList)))
+  }
+
+
+
+}
+
+object DataFrameSchema {
+  private val logger = LoggerFactory.getLogger(classOf[BigQueryClient])
+
+  def getTypeName(dataType: String):DataType ={
+    dataType match {
+      case "INTEGER" => LongType
+      case "FLOAT" => FloatType
+      case "STRING" => StringType
+      case "BYTES" => BinaryType
+      case "BOOLEAN" => BooleanType
+      case "TIMESTAMP" => TimestampType
+    }
+
+  }
+  private def typeToStructField(field: TableFieldSchema, dataType:String): StructField = {
+    dataType match {
+      case "RECORD" => {
+        val structFields = field.getFields().asScala.map(f=> typeToStructField(f,f.getType))
+        val structType = StructType(structFields.toList)
+        new StructField(field.getName, structType)
+      }
+      case other => {
+        new StructField(field.getName,getTypeName(dataType))
+      }
+    }
+  }
+  private def bqSchemaToStructType(tableSchema: TableSchema): StructType = {
+    val bqSchemaFields = tableSchema.getFields().asScala.map(s=>typeToStructField(s,s.getType))
+    val structType = StructType(bqSchemaFields.toList)
+    structType
+  }
+
+  def apply(tableSchema: TableSchema): StructType = {
+    bqSchemaToStructType(tableSchema)
   }
 }
