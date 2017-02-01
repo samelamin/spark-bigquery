@@ -211,6 +211,8 @@ class BigQueryClient(sqlContext: SQLContext, var bigquery: Bigquery = null) exte
 
   def getTableSchema(tableReference: TableReference): TableSchema = {
     val table = bigquery.tables().get(tableReference.getProjectId,tableReference.getDatasetId,tableReference.getTableId).execute()
+    logger.warn("*********** table schema is")
+    logger.warn(table.getSchema().toPrettyString)
     table.getSchema()
   }
 

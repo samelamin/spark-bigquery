@@ -80,7 +80,7 @@ import scala.collection.mutable.ArrayBuffer
 
 object BigQuerySource {
   val DEFAULT_SCHEMA = StructType(
-    StructField("Test Column", StringType) ::
+    StructField("Sample Column", StringType) ::
       StructField("value", BinaryType) :: Nil
   )
 }
