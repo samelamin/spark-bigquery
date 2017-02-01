@@ -36,19 +36,21 @@ class DefaultSource
 
   }
 
-  def createBigQueryClient(sqlContext: SQLContext): BigQueryClient = {
-    BigQueryClient.getInstance(sqlContext)
+  def getConvertedSchema(sqlContext: SQLContext,options: Map[String, String]): StructType = {
+    val bigqueryClient = BigQueryClient.getInstance(sqlContext)
+    val tableReference = BigQueryStrings.parseTableReference(options.get("tableReference").get)
+    DataFrameSchema(bigqueryClient.getTableSchema(tableReference))
   }
 
   override def sourceSchema(sqlContext: SQLContext,
                             schema: Option[StructType],
                             providerName: String,
                             options: Map[String, String]): (String, StructType) = {
-    val bigQueryClient = createBigQueryClient(sqlContext)
-    val tableReference = BigQueryStrings.parseTableReference(options.get("tableReference").get)
-    val convertedSchema = DataFrameSchema(bigQueryClient.getTableSchema(tableReference))
+    val convertedSchema = getConvertedSchema(sqlContext,options)
     ("bigquery", schema.getOrElse(convertedSchema))
   }
+
+
 
   override def createSource(sqlContext: SQLContext, metadataPath: String,
                             schema: Option[StructType], providerName: String, parameters: Map[String, String]): Source = {

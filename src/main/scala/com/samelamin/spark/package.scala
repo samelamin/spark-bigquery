@@ -82,7 +82,7 @@ package object spark {
     }
 
     def bigQuerySelect(sqlQuery: String): DataFrame = {
-      bq.query(sqlQuery)
+      bq.selectQuery(sqlQuery)
       val tableData = sqlContext.sparkContext.newAPIHadoopRDD(
         hadoopConf,
         classOf[GsonBigQueryInputFormat],

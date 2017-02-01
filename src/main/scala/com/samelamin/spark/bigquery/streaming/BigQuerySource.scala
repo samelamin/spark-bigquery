@@ -4,8 +4,8 @@ import java.math.BigInteger
 import java.util.concurrent.atomic.AtomicReference
 
 import com.google.cloud.hadoop.io.bigquery.BigQueryStrings
-import com.samelamin.spark.bigquery.{BigQueryClient, DefaultSource}
-import org.apache.spark.sql.{DataFrame, SQLContext}
+import com.samelamin.spark.bigquery.{BigQueryClient, DataFrameSchema, DefaultSource}
+import org.apache.spark.sql.{DataFrame, Row, SQLContext}
 import org.apache.spark.sql.execution.streaming.{Offset, _}
 import org.apache.spark.sql.types.{BinaryType, StringType, StructField, StructType}
 import com.samelamin.spark._
@@ -24,12 +24,16 @@ import scala.collection.mutable.ArrayBuffer
 
   /** Returns the schema of the data from this source */
   override def schema: StructType = {
+    logger.warn("********** current Schema is")
+    logger.warn(currentSchema.toString())
+    if(currentSchema == BigQuerySource.DEFAULT_SCHEMA) {
+      currentSchema = getConvertedSchema(sqlContext)
+    }
     currentSchema
   }
 
   var currentOffset = 0l
   override def getOffset: Option[Offset] = {
-
     val lastModified: BigInteger = sqlContext.getLatestBQModifiedTime(fullyQualifiedOutputTableId)
     logger.warn(s"$fullyQualifiedOutputTableId was last updated on ${lastModified.longValue()}")
     Some(LongOffset(lastModified.longValue()))
@@ -55,13 +59,22 @@ import scala.collection.mutable.ArrayBuffer
          |  _PARTITION_LOAD_TIME BETWEEN TIMESTAMP_MILLIS($startIndex) AND TIMESTAMP_MILLIS($endIndex)
          |""".stripMargin
 
-    logger.warn(query)
     val df = sqlContext.bigQuerySelect(query)
-    df
+
+    logger.warn(s"******** count of df is ${df.count()}")
+
+    if(df.count() != 0) {
+      df
+    } else {
+      sqlContext.createDataFrame(sqlContext.sparkContext.emptyRDD[Row], schema)
+    }
   }
 
-  override def stop(): Unit = {
-
+  override def stop(): Unit = {}
+  def getConvertedSchema(sqlContext: SQLContext): StructType = {
+    val bigqueryClient = BigQueryClient.getInstance(sqlContext)
+    val tableReference = BigQueryStrings.parseTableReference(fullyQualifiedOutputTableId)
+    DataFrameSchema(bigqueryClient.getTableSchema(tableReference))
   }
 }
 

@@ -89,8 +89,6 @@ object BigQuerySchema {
 }
 
 object DataFrameSchema {
-  private val logger = LoggerFactory.getLogger(classOf[BigQueryClient])
-
   def getTypeName(dataType: String):DataType ={
     dataType match {
       case "INTEGER" => LongType

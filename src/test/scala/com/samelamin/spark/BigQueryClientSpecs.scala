@@ -72,7 +72,7 @@ class BigQueryClientSpecs extends FeatureSpec with DataFrameSuiteBase with Mocki
     sqlContext.setBigQueryProjectId(BQProjectId)
     val bigQueryMock =  mock[Bigquery](RETURNS_DEEP_STUBS)
     val bigQueryClient = setupBigQueryClient(sqlCtx, bigQueryMock)
-    bigQueryClient.query(sqlQuery)
+    bigQueryClient.selectQuery(sqlQuery)
     verify(bigQueryMock.jobs().insert(mockitoEq(BQProjectId),any[Job]), times(1)).execute()
   }
 }
