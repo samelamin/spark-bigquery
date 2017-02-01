@@ -60,8 +60,8 @@ import scala.collection.mutable.ArrayBuffer
          |""".stripMargin
 
     val df = sqlContext.bigQuerySelect(query)
-
-    logger.warn(s"******** count of df is ${df.count()}")
+    logger.warn("******* schema at batch is")
+    logger.warn(schema.toString())
 
     if(df.count() != 0) {
       df
