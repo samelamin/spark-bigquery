@@ -16,11 +16,8 @@ class BigQuerySink(options: Map[String, String]) extends Sink with Serializable 
   private val logger = LoggerFactory.getLogger(classOf[BigQuerySink])
 
   override def addBatch(batchId: Long, data: DataFrame): Unit = {
-    val fullyQualifiedOutputTableId = options.get("tableReference").get
+    val fullyQualifiedOutputTableId = options.get("tableReferenceSink").get
     val isPartitionByDay = Try(options.get("partitionByDay").get.toBoolean).getOrElse(true)
-
-    logger.warn("************ saving schema is set to")
-    logger.warn(data.schema.toString())
     data.saveAsBigQueryTable(fullyQualifiedOutputTableId,isPartitionByDay)
   }
 }

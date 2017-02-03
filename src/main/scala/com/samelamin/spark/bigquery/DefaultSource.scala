@@ -29,7 +29,6 @@ import org.slf4j.LoggerFactory
 class DefaultSource
   extends StreamSinkProvider
     with StreamSourceProvider {
-
   override def createSink(sqlContext: SQLContext, parameters: Map[String, String],
                           partitionColumns: Seq[String], outputMode: OutputMode): Sink = {
     new BigQuerySink(parameters)
@@ -38,8 +37,10 @@ class DefaultSource
 
   def getConvertedSchema(sqlContext: SQLContext,options: Map[String, String]): StructType = {
     val bigqueryClient = BigQueryClient.getInstance(sqlContext)
-    val tableReference = BigQueryStrings.parseTableReference(options.get("tableReference").get)
+    val tableReference = BigQueryStrings.parseTableReference(options.get("tableReferenceSource").get)
+
     DataFrameSchema(bigqueryClient.getTableSchema(tableReference))
+
   }
 
   override def sourceSchema(sqlContext: SQLContext,

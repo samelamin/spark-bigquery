@@ -19,23 +19,17 @@ import scala.collection.mutable.ArrayBuffer
                        options: Map[String, String]) extends Source {
   val hadoopConfiguration = sqlContext.sparkContext.hadoopConfiguration
   private val logger = LoggerFactory.getLogger(classOf[BigQuerySource])
-  var currentSchema:StructType = BigQuerySource.DEFAULT_SCHEMA
-  val fullyQualifiedOutputTableId = options.get("tableReference").get
+  val fullyQualifiedOutputTableId = options.get("tableReferenceSource").get
 
   /** Returns the schema of the data from this source */
   override def schema: StructType = {
-    logger.warn("********** current Schema is")
-    logger.warn(currentSchema.toString())
-    if(currentSchema == BigQuerySource.DEFAULT_SCHEMA) {
-      currentSchema = getConvertedSchema(sqlContext)
-    }
-    currentSchema
+    BigQuerySource.DEFAULT_SCHEMA
   }
 
   var currentOffset = 0l
   override def getOffset: Option[Offset] = {
     val lastModified: BigInteger = sqlContext.getLatestBQModifiedTime(fullyQualifiedOutputTableId)
-    logger.warn(s"$fullyQualifiedOutputTableId was last updated on ${lastModified.longValue()}")
+    logger.info(s"$fullyQualifiedOutputTableId was last updated on ${lastModified.longValue()}")
     Some(LongOffset(lastModified.longValue()))
   }
 
@@ -45,10 +39,11 @@ import scala.collection.mutable.ArrayBuffer
     * same data for a particular `start` and `end` pair.
     */
   override def getBatch(start: Option[Offset], end: Offset): DataFrame = {
+
     val startIndex = start.getOrElse(LongOffset(0L)).asInstanceOf[LongOffset].offset.toLong
     val endIndex = end.asInstanceOf[LongOffset].offset.toLong
 
-    logger.warn(s"************* getting data between $startIndex and $endIndex")
+    logger.info(s"Fetching data between $startIndex and $endIndex")
     val query =
       s"""
          |SELECT
@@ -60,14 +55,7 @@ import scala.collection.mutable.ArrayBuffer
          |""".stripMargin
 
     val df = sqlContext.bigQuerySelect(query)
-    logger.warn("******* schema at batch is")
-    logger.warn(schema.toString())
-
-    if(df.count() != 0) {
-      df
-    } else {
-      sqlContext.createDataFrame(sqlContext.sparkContext.emptyRDD[Row], schema)
-    }
+    df
   }
 
   override def stop(): Unit = {}
