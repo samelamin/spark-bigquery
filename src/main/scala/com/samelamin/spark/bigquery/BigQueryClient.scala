@@ -107,12 +107,12 @@ class BigQueryClient(sqlContext: SQLContext, var bigquery: Bigquery = null) exte
   /**
     * Perform a BigQuery SELECT query and save results to a temporary table.
     */
-  def selectQuery(sqlQuery: String): TableReference = {
+  def selectQuery(sqlQuery: String): Unit = {
     val tableReference = queryCache.get(sqlQuery)
     val fullyQualifiedInputTableId = BigQueryStrings.toString(tableReference)
     BigQueryConfiguration.configureBigQueryInput(hadoopConf, fullyQualifiedInputTableId)
-    tableReference
   }
+
   private val queryCache: LoadingCache[String, TableReference] =
     CacheBuilder.newBuilder()
       .expireAfterWrite(STAGING_DATASET_TABLE_EXPIRATION_MS, TimeUnit.MILLISECONDS)
