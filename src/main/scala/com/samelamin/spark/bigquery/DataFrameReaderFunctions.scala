@@ -1,11 +1,9 @@
 package com.samelamin.spark.bigquery
 
-import org.apache.spark.sql.sources.Filter
 import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.{DataFrame, DataFrameReader}
-
 /**
-  * Created by root on 29/01/2017.
+  * Created by sam elamin on 29/01/2017.
   */
 class DataFrameReaderFunctions(@transient val dfr: DataFrameReader) extends Serializable {
   private val source = "com.samelamin.spark.bigquery.DefaultSource"

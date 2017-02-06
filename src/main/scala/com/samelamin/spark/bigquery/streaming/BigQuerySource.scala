@@ -1,19 +1,15 @@
 package com.samelamin.spark.bigquery.streaming
 
 import java.math.BigInteger
-import java.util.concurrent.atomic.AtomicReference
-
 import com.google.cloud.hadoop.io.bigquery.BigQueryStrings
-import com.samelamin.spark.bigquery.{BigQueryClient, DataFrameSchema, DefaultSource}
-import org.apache.spark.sql.{DataFrame, Row, SQLContext}
+import com.samelamin.spark.bigquery.{BigQueryClient, SchemaConverters}
+import org.apache.spark.sql.{DataFrame, SQLContext}
 import org.apache.spark.sql.execution.streaming.{Offset, _}
 import org.apache.spark.sql.types.{BinaryType, StringType, StructField, StructType}
 import com.samelamin.spark._
 import org.slf4j.LoggerFactory
-
-import scala.collection.mutable.ArrayBuffer
 /**
-  * Created by samelamin on 29/01/2017.
+  * Created by sam elamin on 29/01/2017.
   */
   class BigQuerySource(sqlContext: SQLContext, user_schema: Option[StructType],
                        options: Map[String, String]) extends Source {
@@ -62,7 +58,7 @@ import scala.collection.mutable.ArrayBuffer
   def getConvertedSchema(sqlContext: SQLContext): StructType = {
     val bigqueryClient = BigQueryClient.getInstance(sqlContext)
     val tableReference = BigQueryStrings.parseTableReference(fullyQualifiedOutputTableId)
-    DataFrameSchema(bigqueryClient.getTableSchema(tableReference))
+    SchemaConverters.BQToSQLSchema(bigqueryClient.getTableSchema(tableReference))
   }
 }
 

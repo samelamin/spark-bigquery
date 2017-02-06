@@ -17,13 +17,10 @@ import com.google.gson.JsonParser
 import com.samelamin.spark.{CreateDisposition, WriteDisposition}
 import org.apache.hadoop.util.Progressable
 import org.apache.spark.sql._
-import org.apache.spark.sql.types.{DataType, StructType}
-
 import scala.collection.JavaConverters._
 import org.joda.time.Instant
 import org.joda.time.format.DateTimeFormat
 import org.slf4j.LoggerFactory
-
 import scala.util.Random
 import scala.util.control.NonFatal
 
@@ -105,6 +102,7 @@ class BigQueryClient(sqlContext: SQLContext, var bigquery: Bigquery = null) exte
     bigquery.jobs().insert(projectId, job).execute()
     waitForJob(job)
   }
+
 
   /**
     * Perform a BigQuery SELECT query and save results to a temporary table.

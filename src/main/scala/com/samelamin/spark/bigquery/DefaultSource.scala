@@ -22,7 +22,6 @@ import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.execution.streaming.{Sink, Source}
 import org.apache.spark.sql.streaming.OutputMode
 import org.apache.spark.sql.SQLContext
-import org.slf4j.LoggerFactory
 /**
   * The default BigQuery source for Spark SQL.
   */
@@ -39,7 +38,7 @@ class DefaultSource
     val bigqueryClient = BigQueryClient.getInstance(sqlContext)
     val tableReference = BigQueryStrings.parseTableReference(options.get("tableReferenceSource").get)
 
-    DataFrameSchema(bigqueryClient.getTableSchema(tableReference))
+    SchemaConverters.BQToSQLSchema(bigqueryClient.getTableSchema(tableReference))
 
   }
 
@@ -50,8 +49,6 @@ class DefaultSource
     val convertedSchema = getConvertedSchema(sqlContext,options)
     ("bigquery", schema.getOrElse(convertedSchema))
   }
-
-
 
   override def createSource(sqlContext: SQLContext, metadataPath: String,
                             schema: Option[StructType], providerName: String, parameters: Map[String, String]): Source = {

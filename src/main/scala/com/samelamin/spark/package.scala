@@ -3,7 +3,7 @@ import java.math.BigInteger
 
 import com.google.api.services.bigquery.model.TableReference
 import com.google.cloud.hadoop.io.bigquery._
-import com.google.gson.{JsonObject, JsonParser}
+import com.google.gson._
 import com.samelamin.spark.bigquery._
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.hadoop.io.{LongWritable, NullWritable}
@@ -11,11 +11,12 @@ import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat
 import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.{DataFrame, DataFrameWriter, Row, SQLContext}
 import org.slf4j.LoggerFactory
-
+import org.apache.avro.generic.GenericData
+import com.google.cloud.hadoop.io.bigquery.AvroBigQueryInputFormat
+import org.apache.avro.Schema
 import scala.util.Random
-
 /**
-  * Createdby sam elamin on 28/01/2017.
+  * Created by sam elamin on 28/01/2017.
   */
 package object spark {
   implicit def toDataFrameWriterFunctions(dfw: DataFrameWriter[Row]): DataFrameWriterFunctions =
@@ -25,6 +26,7 @@ package object spark {
     lazy val bq = BigQueryClient.getInstance(sqlContext)
     @transient
     lazy val hadoopConf = sqlContext.sparkContext.hadoopConfiguration
+    private val logger = LoggerFactory.getLogger(classOf[BigQueryClient])
 
     /**
       * Set whether to allow schema updates
@@ -82,16 +84,17 @@ package object spark {
     }
 
     def bigQuerySelect(sqlQuery: String): DataFrame = {
-      val tableReference = bq.selectQuery(sqlQuery)
       val tableData = sqlContext.sparkContext.newAPIHadoopRDD(
         hadoopConf,
-        classOf[GsonBigQueryInputFormat],
+        classOf[AvroBigQueryInputFormat],
         classOf[LongWritable],
-        classOf[JsonObject]).map(_._2.toString)
-      val tableSchema = DataFrameSchema(bq.getTableSchema(tableReference))
-
-      val df = sqlContext.read.schema(tableSchema).json(tableData)
-      df
+        classOf[GenericData.Record]).map(x=>x._2)
+      val schemaString = tableData.map(_.getSchema.toString).first()
+      val schema = new Schema.Parser().parse(schemaString)
+      val structType = SchemaConverters.avroToSqlType(schema).dataType.asInstanceOf[StructType]
+      val converter = SchemaConverters.createConverterToSQL(schema)
+        .asInstanceOf[GenericData.Record => Row]
+      sqlContext.createDataFrame(tableData.map(converter), structType)
     }
 
     def getLatestBQModifiedTime(tableReference: String): BigInteger = {
@@ -99,7 +102,7 @@ package object spark {
     }
 
     def getBigQuerySchema(tableReference: String): StructType = {
-      DataFrameSchema(bq.getTableSchema(BigQueryStrings.parseTableReference(tableReference)))
+      SchemaConverters.BQToSQLSchema(bq.getTableSchema(BigQueryStrings.parseTableReference(tableReference)))
     }
   }
   implicit class BigQueryDataFrame(self: DataFrame) extends Serializable {
@@ -126,7 +129,7 @@ package object spark {
                             createDisposition: CreateDisposition.Value = null): Unit = {
 
       val destinationTable = BigQueryStrings.parseTableReference(fullyQualifiedOutputTableId)
-      val bigQuerySchema = BigQuerySchema(adaptedDf)
+      val bigQuerySchema = SchemaConverters.SqlToBQSchema(adaptedDf)
       val gcsPath = writeDFToGoogleStorage(adaptedDf,destinationTable,bigQuerySchema)
       bq.load(destinationTable,
         bigQuerySchema,

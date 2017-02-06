@@ -1,16 +1,13 @@
 package com.samelamin.spark.utils
 
 import com.google.api.client.googleapis.json.GoogleJsonResponseException
-import com.google.api.services.bigquery.Bigquery
 import com.google.api.services.bigquery.model.{Table, TableReference, TimePartitioning}
 import com.samelamin.spark.bigquery.BigQueryServiceFactory
 import org.apache.log4j.LogManager
-import org.slf4j.{Logger, LoggerFactory}
-
 import scala.util.control.NonFatal
 
 /**
-  * Createdby sam elamin on 1/9/17.
+  * Created by sam elamin on 1/9/17.
   */
 object BigQueryPartitionUtils {
   private val logger = LogManager.getRootLogger()
