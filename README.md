@@ -88,7 +88,7 @@ val df = spark.readStream.json("s3a://bucket")
 
 df.writeStream
       .option("checkpointLocation", "s3a://checkpoint/dir")
-      .option("tableReference","my-project:my_dataset.my_table")
+      .option("tableReferenceSink","my-project:my_dataset.my_table")
       .format("com.samelamin.spark.bigquery")
       .start()
 ```
