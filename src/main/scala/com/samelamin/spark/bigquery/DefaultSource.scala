@@ -30,7 +30,9 @@ class DefaultSource
     with StreamSourceProvider {
   override def createSink(sqlContext: SQLContext, parameters: Map[String, String],
                           partitionColumns: Seq[String], outputMode: OutputMode): Sink = {
-    new BigQuerySink(parameters)
+
+    val path = parameters.get("path").getOrElse("transaction_log")
+    new BigQuerySink(sqlContext.sparkSession, path, parameters)
 
   }
 
