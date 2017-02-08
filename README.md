@@ -7,7 +7,7 @@ This Spark module allows saving DataFrame as BigQuery table.
 
 The project was inspired by [spotify/spark-bigquery](https://github.com/spotify/spark-bigquery), but there are several differences:
 
-* Use of the Structured Streaming API on Spark 2.0
+* Use of the Structured Streaming API on Spark 2.1
 
 * JSON is used as an intermediate format instead of Avro. This allows having fields on different levels named the same:
 
@@ -88,7 +88,7 @@ val df = spark.readStream.json("s3a://bucket")
 
 df.writeStream
       .option("checkpointLocation", "s3a://checkpoint/dir")
-      .option("tableSpec","my-project:my_dataset.my_table")
+      .option("tableReferenceSink","my-project:my_dataset.my_table")
       .format("com.samelamin.spark.bigquery")
       .start()
 ```
@@ -131,8 +131,9 @@ sqlContext.setAllowSchemaUpdates()
 Notes on using this API:
 
  * Target data set must already exist
+ * Structured Streaming needs a partitioned table
  * Structured Streaming currently does not support schema updates
-
+ * For use with Databricks please follow this [guide](https://github.com/samelamin/spark-bigquery/blob/master/Databricks.md)
 # License
 
 Copyright 2016 samelamin.

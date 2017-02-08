@@ -1,9 +1,9 @@
-package com.samelamin.spark
+package com.samelamin.spark.bigquery
 
 import com.holdenkarau.spark.testing.DataFrameSuiteBase
-import com.samelamin.spark.bigquery.BigQuerySchema
 import org.scalatest.Matchers._
 import org.scalatest.{FeatureSpec, GivenWhenThen}
+import com.samelamin.spark.bigquery.converters._
 
 class BigQuerySchemaSpecs extends FeatureSpec with GivenWhenThen with DataFrameSuiteBase {
   feature("Schema Converters. Dataframe To BQ Schema") {
@@ -16,7 +16,7 @@ class BigQuerySchemaSpecs extends FeatureSpec with GivenWhenThen with DataFrameS
       val df = sqlContext.read.json(sc.parallelize(List(sampleJson)))
 
       When("Passing the schema to the converter")
-      val tableSchema = BigQuerySchema(df)
+      val tableSchema = SchemaConverters.SqlToBQSchema(df)
 
       Then("We should receive a BQ Table Schema")
       val expectedSchema = """[ {
@@ -34,7 +34,6 @@ class BigQuerySchemaSpecs extends FeatureSpec with GivenWhenThen with DataFrameS
       tableSchema should be (expectedSchema)
 
     }
-
     scenario("When converting a complex dataframe with nested data") {
       Given("A dataframe")
       val sqlCtx = sqlContext
@@ -71,7 +70,7 @@ class BigQuerySchemaSpecs extends FeatureSpec with GivenWhenThen with DataFrameS
       val df = sqlContext.read.json(sc.parallelize(List(sampleNestedJson)))
 
       When("Passing the schema to the converter")
-      val tableSchema = BigQuerySchema(df)
+      val tableSchema = SchemaConverters.SqlToBQSchema(df)
 
       Then("We should receive a BQ Table Schema")
       tableSchema should not be null

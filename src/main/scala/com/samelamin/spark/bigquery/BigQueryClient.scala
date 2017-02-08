@@ -1,27 +1,25 @@
 package com.samelamin.spark.bigquery
 
+import java.math.BigInteger
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 
-import com.samelamin.spark.utils.BigQueryPartitionUtils
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential
 import com.google.api.client.googleapis.json.GoogleJsonResponseException
 import com.google.api.client.http.javanet.NetHttpTransport
 import com.google.api.client.json.jackson2.JacksonFactory
+import com.google.api.services.bigquery.model.{Dataset => BQDataset, _}
 import com.google.api.services.bigquery.{Bigquery, BigqueryScopes}
-import com.google.api.services.bigquery.model._
-import com.google.api.services.bigquery.model.{Dataset => BQDataset}
 import com.google.cloud.hadoop.io.bigquery._
 import com.google.common.cache.{CacheBuilder, CacheLoader, LoadingCache}
 import com.google.gson.JsonParser
+import com.samelamin.spark.bigquery.utils.BigQueryPartitionUtils
 import org.apache.hadoop.util.Progressable
 import org.apache.spark.sql._
-
-import scala.collection.JavaConverters._
 import org.joda.time.Instant
 import org.joda.time.format.DateTimeFormat
 import org.slf4j.LoggerFactory
-
+import scala.collection.JavaConverters._
 import scala.util.Random
 import scala.util.control.NonFatal
 
@@ -61,6 +59,7 @@ class BigQueryClient(sqlContext: SQLContext, var bigquery: Bigquery = null) exte
   val STAGING_DATASET_DESCRIPTION = "Spark BigQuery staging dataset"
   val DEFAULT_TABLE_EXPIRATION_MS = 259200000L
   val ALLOW_SCHEMA_UPDATES = "ALLOW_SCHEMA_UPDATES"
+  val USE_STANDARD_SQL_DIALECT = "USE_STANDARD_SQL_DIALECT"
   private val logger = LoggerFactory.getLogger(classOf[BigQueryClient])
   private def projectId = hadoopConf.get(BigQueryConfiguration.PROJECT_ID_KEY)
   private def inConsole = Thread.currentThread().getStackTrace.exists(
@@ -87,10 +86,8 @@ class BigQueryClient(sqlContext: SQLContext, var bigquery: Bigquery = null) exte
       .setSourceUris(List(gcsPath + "/*").asJava)
 
     if(allow_schema_updates) {
-      logger.warn("updating schema update options")
       loadConfig.setSchemaUpdateOptions(List("ALLOW_FIELD_ADDITION", "ALLOW_FIELD_RELAXATION").asJava)
     }
-
     if (writeDisposition != null) {
       loadConfig = loadConfig.setWriteDisposition(writeDisposition.toString)
     }
@@ -105,15 +102,16 @@ class BigQueryClient(sqlContext: SQLContext, var bigquery: Bigquery = null) exte
     waitForJob(job)
   }
 
+
   /**
     * Perform a BigQuery SELECT query and save results to a temporary table.
     */
-  def query(sqlQuery: String): Unit = {
+  def selectQuery(sqlQuery: String): Unit = {
     val tableReference = queryCache.get(sqlQuery)
     val fullyQualifiedInputTableId = BigQueryStrings.toString(tableReference)
     BigQueryConfiguration.configureBigQueryInput(hadoopConf, fullyQualifiedInputTableId)
-
   }
+
   private val queryCache: LoadingCache[String, TableReference] =
     CacheBuilder.newBuilder()
       .expireAfterWrite(STAGING_DATASET_TABLE_EXPIRATION_MS, TimeUnit.MILLISECONDS)
@@ -124,7 +122,10 @@ class BigQueryClient(sqlContext: SQLContext, var bigquery: Bigquery = null) exte
         val location = hadoopConf.get(STAGING_DATASET_LOCATION, STAGING_DATASET_LOCATION_DEFAULT)
         val destinationTable = temporaryTable(location)
         logger.info(s"Destination table: $destinationTable")
-        val job = createQueryJob(sqlQuery, destinationTable, dryRun = false)
+        val use_legacy_sql = !hadoopConf.get(USE_STANDARD_SQL_DIALECT,"true").toBoolean
+
+        val job = createQueryJob(sqlQuery, destinationTable, dryRun = false,use_legacy_sql)
+
         waitForJob(job)
         destinationTable
       }
@@ -173,12 +174,17 @@ class BigQueryClient(sqlContext: SQLContext, var bigquery: Bigquery = null) exte
 
   private def createQueryJob(sqlQuery: String,
                              destinationTable: TableReference,
-                             dryRun: Boolean): Job = {
+                             dryRun: Boolean,use_legacy_sql: Boolean = false): Job = {
     var queryConfig = new JobConfigurationQuery()
       .setQuery(sqlQuery)
       .setPriority(PRIORITY)
       .setCreateDisposition("CREATE_IF_NEEDED")
       .setWriteDisposition("WRITE_EMPTY")
+
+    logger.info(s"Using legacy Sql: $use_legacy_sql")
+
+    queryConfig.setUseLegacySql(use_legacy_sql)
+
     if (destinationTable != null) {
       queryConfig = queryConfig
         .setDestinationTable(destinationTable)
@@ -195,13 +201,15 @@ class BigQueryClient(sqlContext: SQLContext, var bigquery: Bigquery = null) exte
     val fullJobId = projectId + "-" + UUID.randomUUID().toString
     new JobReference().setProjectId(projectId).setJobId(fullJobId)
   }
-}
 
-object CreateDisposition extends Enumeration {
-  val CREATE_IF_NEEDED, CREATE_NEVER = Value
-}
+  def getLatestModifiedTime(tableReference: TableReference): BigInteger = {
+    val table = bigquery.tables().get(tableReference.getProjectId,tableReference.getDatasetId,tableReference.getTableId).execute()
+    table.getLastModifiedTime()
+  }
 
-object WriteDisposition extends Enumeration {
-  val WRITE_TRUNCATE, WRITE_APPEND, WRITE_EMPTY = Value
-}
+  def getTableSchema(tableReference: TableReference): TableSchema = {
+    val table = bigquery.tables().get(tableReference.getProjectId,tableReference.getDatasetId,tableReference.getTableId).execute()
+    table.getSchema()
+  }
 
+}

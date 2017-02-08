@@ -1,4 +1,4 @@
-package com.samelamin.spark
+package com.samelamin.spark.bigquery
 
 import java.io.File
 
@@ -6,7 +6,7 @@ import com.google.api.services.bigquery.Bigquery
 import com.google.api.services.bigquery.model._
 import com.google.cloud.hadoop.io.bigquery._
 import com.holdenkarau.spark.testing.DataFrameSuiteBase
-import com.samelamin.spark.bigquery.{BigQueryAdapter, BigQueryClient, BigQuerySchema}
+import com.samelamin.spark.bigquery.converters.{BigQueryAdapter, SchemaConverters}
 import org.apache.commons.io.FileUtils
 import org.apache.spark.sql._
 import org.mockito.Matchers.{any, eq => mockitoEq}
@@ -59,7 +59,7 @@ class BigQueryClientSpecs extends FeatureSpec with DataFrameSuiteBase with Mocki
     val fullyQualifiedOutputTableId = "testProjectID:test_dataset.test"
     val targetTable = BigQueryStrings.parseTableReference(fullyQualifiedOutputTableId)
     val bigQueryClient = setupBigQueryClient(sqlCtx, bigQueryMock)
-    val bigQuerySchema = BigQuerySchema(adaptedDf)
+    val bigQuerySchema = SchemaConverters.SqlToBQSchema(adaptedDf)
 
     bigQueryClient.load(targetTable,bigQuerySchema,gcsPath)
     verify(bigQueryMock.jobs().insert(mockitoEq(BQProjectId),any[Job]), times(1)).execute()
@@ -72,7 +72,7 @@ class BigQueryClientSpecs extends FeatureSpec with DataFrameSuiteBase with Mocki
     sqlContext.setBigQueryProjectId(BQProjectId)
     val bigQueryMock =  mock[Bigquery](RETURNS_DEEP_STUBS)
     val bigQueryClient = setupBigQueryClient(sqlCtx, bigQueryMock)
-    bigQueryClient.query(sqlQuery)
+    bigQueryClient.selectQuery(sqlQuery)
     verify(bigQueryMock.jobs().insert(mockitoEq(BQProjectId),any[Job]), times(1)).execute()
   }
 }
