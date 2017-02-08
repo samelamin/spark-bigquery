@@ -18,16 +18,13 @@ class BigQuerySink(sparkSession: SparkSession, path: String, options: Map[String
   private val logPath = new Path(basePath, BigQuerySink.metadataDir)
   private val fileLog = new BigQuerySinkLog(sparkSession, logPath.toUri.toString)
   override def addBatch(batchId: Long, data: DataFrame): Unit = {
-
-    logger.warn(s"********* log path uri is ${logPath.toUri.toString}")
-    logger.warn(s"********* latest is ${fileLog.getLatest().map(x=> x)}")
     if (batchId <= fileLog.getLatest().getOrElse(-1L)) {
-      logger.warn(s"Skipping already committed batch $batchId")
+      logger.info(s"Skipping already committed batch $batchId")
     } else {
-      fileLog.writeBatch(batchId)
       val fullyQualifiedOutputTableId = options.get("tableReferenceSink").get
       val isPartitionByDay = Try(options.get("partitionByDay").get.toBoolean).getOrElse(true)
       data.saveAsBigQueryTable(fullyQualifiedOutputTableId, isPartitionByDay)
+      fileLog.writeBatch(batchId)
     }
   }
 }
