@@ -1,26 +1,26 @@
 package com.samelamin.spark.bigquery
+
 import java.math.BigInteger
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 
-import com.samelamin.spark.utils.BigQueryPartitionUtils
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential
 import com.google.api.client.googleapis.json.GoogleJsonResponseException
 import com.google.api.client.http.javanet.NetHttpTransport
 import com.google.api.client.json.jackson2.JacksonFactory
+import com.google.api.services.bigquery.model.{Dataset => BQDataset, _}
 import com.google.api.services.bigquery.{Bigquery, BigqueryScopes}
-import com.google.api.services.bigquery.model._
-import com.google.api.services.bigquery.model.{Dataset => BQDataset}
 import com.google.cloud.hadoop.io.bigquery._
 import com.google.common.cache.{CacheBuilder, CacheLoader, LoadingCache}
 import com.google.gson.JsonParser
-import com.samelamin.spark.{CreateDisposition, WriteDisposition}
+import com.samelamin.spark.bigquery.utils.BigQueryPartitionUtils
 import org.apache.hadoop.util.Progressable
 import org.apache.spark.sql._
-import scala.collection.JavaConverters._
 import org.joda.time.Instant
 import org.joda.time.format.DateTimeFormat
 import org.slf4j.LoggerFactory
+import com.samelamin.spark.bigquery._
+import scala.collection.JavaConverters._
 import scala.util.Random
 import scala.util.control.NonFatal
 

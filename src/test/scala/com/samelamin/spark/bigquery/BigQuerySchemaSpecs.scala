@@ -1,7 +1,6 @@
-package com.samelamin.spark
+package com.samelamin.spark.bigquery
 
 import com.holdenkarau.spark.testing.DataFrameSuiteBase
-import com.samelamin.spark.bigquery.BigQuerySchema
 import org.scalatest.Matchers._
 import org.scalatest.{FeatureSpec, GivenWhenThen}
 

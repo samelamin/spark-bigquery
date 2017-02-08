@@ -1,12 +1,14 @@
 package com.samelamin.spark.bigquery.streaming
 
 import java.math.BigInteger
+
 import com.google.cloud.hadoop.io.bigquery.BigQueryStrings
-import com.samelamin.spark.bigquery.{BigQueryClient, SchemaConverters}
+import com.samelamin.spark.bigquery.BigQueryClient
 import org.apache.spark.sql.{DataFrame, SQLContext}
 import org.apache.spark.sql.execution.streaming.{Offset, _}
 import org.apache.spark.sql.types.{BinaryType, StringType, StructField, StructType}
-import com.samelamin.spark._
+import com.samelamin.spark.bigquery._
+import com.samelamin.spark.bigquery.converters.SchemaConverters
 import org.slf4j.LoggerFactory
 /**
   * Created by sam elamin on 29/01/2017.

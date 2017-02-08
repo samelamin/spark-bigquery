@@ -1,13 +1,11 @@
 package com.samelamin.spark.bigquery.streaming
 
 import org.apache.spark.sql.{DataFrame, SparkSession}
-import org.apache.spark.sql.execution.streaming.{FileStreamSinkLog, Sink}
-import com.samelamin.spark._
+import org.apache.spark.sql.execution.streaming.Sink
+import com.samelamin.spark.bigquery._
 import org.slf4j.LoggerFactory
-
 import scala.util.Try
 import org.apache.hadoop.fs.Path
-import org.apache.spark.internal.Logging
 
 /**
   * A simple Structured Streaming sink which writes the data frame to Google Bigquery.
@@ -18,14 +16,15 @@ class BigQuerySink(sparkSession: SparkSession, path: String, options: Map[String
   private val logger = LoggerFactory.getLogger(classOf[BigQuerySink])
   private val basePath = new Path(path)
   private val logPath = new Path(basePath, BigQuerySink.metadataDir)
-
-  private val fileLog =
-    new FileStreamSinkLog(FileStreamSinkLog.VERSION, sparkSession, logPath.toUri.toString)
+  private val fileLog = new BigQuerySinkLog(sparkSession, logPath.toUri.toString)
   override def addBatch(batchId: Long, data: DataFrame): Unit = {
 
-    if (batchId <= fileLog.getLatest().map(_._1).getOrElse(-1L)) {
-      logger.info(s"Skipping already committed batch $batchId")
+    logger.warn(s"********* log path uri is ${logPath.toUri.toString}")
+    logger.warn(s"********* latest is ${fileLog.getLatest().map(x=> x)}")
+    if (batchId <= fileLog.getLatest().getOrElse(-1L)) {
+      logger.warn(s"Skipping already committed batch $batchId")
     } else {
+      fileLog.writeBatch(batchId)
       val fullyQualifiedOutputTableId = options.get("tableReferenceSink").get
       val isPartitionByDay = Try(options.get("partitionByDay").get.toBoolean).getOrElse(true)
       data.saveAsBigQueryTable(fullyQualifiedOutputTableId, isPartitionByDay)
@@ -37,5 +36,4 @@ object BigQuerySink {
   // The name of the subdirectory that is used to store metadata about which files are valid.
   val metadataDir = "_spark_metadata"
 }
-
 

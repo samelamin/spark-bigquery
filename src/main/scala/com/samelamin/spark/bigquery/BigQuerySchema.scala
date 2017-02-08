@@ -17,18 +17,14 @@
 
 package com.samelamin.spark.bigquery
 
-import java.util.function.Consumer
-
 import com.google.api.services.bigquery.model.{TableFieldSchema, TableSchema}
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.types._
 import org.json4s.JsonAST.{JArray, JValue}
 import org.json4s.JsonDSL._
 import org.json4s.jackson.JsonMethods.{pretty, render}
-import org.slf4j.LoggerFactory
 
 import scala.collection.JavaConverters._
-import scala.collection.mutable
 
 /**
   * Builds BigQuery input JSON schema based on DataFrame.

@@ -15,13 +15,14 @@
  */
 package com.samelamin.spark.bigquery
 
-import com.google.cloud.hadoop.io.bigquery.{BigQueryStrings}
+import com.google.cloud.hadoop.io.bigquery.BigQueryStrings
+import com.samelamin.spark.bigquery.converters.SchemaConverters
 import com.samelamin.spark.bigquery.streaming.{BigQuerySink, BigQuerySource}
-import org.apache.spark.sql.sources._
-import org.apache.spark.sql.types.StructType
-import org.apache.spark.sql.execution.streaming.{Sink, Source}
-import org.apache.spark.sql.streaming.OutputMode
 import org.apache.spark.sql.SQLContext
+import org.apache.spark.sql.execution.streaming.{Sink, Source}
+import org.apache.spark.sql.sources._
+import org.apache.spark.sql.streaming.OutputMode
+import org.apache.spark.sql.types.StructType
 /**
   * The default BigQuery source for Spark SQL.
   */
@@ -39,9 +40,7 @@ class DefaultSource
   def getConvertedSchema(sqlContext: SQLContext,options: Map[String, String]): StructType = {
     val bigqueryClient = BigQueryClient.getInstance(sqlContext)
     val tableReference = BigQueryStrings.parseTableReference(options.get("tableReferenceSource").get)
-
     SchemaConverters.BQToSQLSchema(bigqueryClient.getTableSchema(tableReference))
-
   }
 
   override def sourceSchema(sqlContext: SQLContext,

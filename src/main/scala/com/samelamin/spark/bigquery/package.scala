@@ -1,10 +1,10 @@
-package com.samelamin
+package com.samelamin.spark
+
 import java.math.BigInteger
 
 import com.google.api.services.bigquery.model.TableReference
 import com.google.cloud.hadoop.io.bigquery._
 import com.google.gson._
-import com.samelamin.spark.bigquery._
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.hadoop.io.{LongWritable, NullWritable}
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat
@@ -13,12 +13,14 @@ import org.apache.spark.sql.{DataFrame, DataFrameWriter, Row, SQLContext}
 import org.slf4j.LoggerFactory
 import org.apache.avro.generic.GenericData
 import com.google.cloud.hadoop.io.bigquery.AvroBigQueryInputFormat
+import com.samelamin.spark.bigquery.converters.{BigQueryAdapter, SchemaConverters}
 import org.apache.avro.Schema
+
 import scala.util.Random
 /**
   * Created by sam elamin on 28/01/2017.
   */
-package object spark {
+package object bigquery {
   implicit def toDataFrameWriterFunctions(dfw: DataFrameWriter[Row]): DataFrameWriterFunctions =
     new DataFrameWriterFunctions(dfw)
 

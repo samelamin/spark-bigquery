@@ -1,9 +1,10 @@
-package com.samelamin.spark.utils
+package com.samelamin.spark.bigquery.utils
 
 import com.google.api.client.googleapis.json.GoogleJsonResponseException
 import com.google.api.services.bigquery.model.{Table, TableReference, TimePartitioning}
 import com.samelamin.spark.bigquery.BigQueryServiceFactory
 import org.apache.log4j.LogManager
+
 import scala.util.control.NonFatal
 
 /**

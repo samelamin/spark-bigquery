@@ -1,4 +1,4 @@
-package com.samelamin.spark
+package com.samelamin.spark.bigquery
 
 import java.io.File
 
@@ -6,7 +6,7 @@ import com.google.api.services.bigquery.Bigquery
 import com.google.api.services.bigquery.model._
 import com.google.cloud.hadoop.io.bigquery._
 import com.holdenkarau.spark.testing.DataFrameSuiteBase
-import com.samelamin.spark.bigquery.{BigQueryAdapter, BigQueryClient, BigQuerySchema}
+import com.samelamin.spark.bigquery.converters.BigQueryAdapter
 import org.apache.commons.io.FileUtils
 import org.apache.spark.sql._
 import org.mockito.Matchers.{any, eq => mockitoEq}
