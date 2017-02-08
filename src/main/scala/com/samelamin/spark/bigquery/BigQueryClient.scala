@@ -19,7 +19,6 @@ import org.apache.spark.sql._
 import org.joda.time.Instant
 import org.joda.time.format.DateTimeFormat
 import org.slf4j.LoggerFactory
-import com.samelamin.spark.bigquery._
 import scala.collection.JavaConverters._
 import scala.util.Random
 import scala.util.control.NonFatal
