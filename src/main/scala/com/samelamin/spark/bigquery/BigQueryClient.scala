@@ -202,9 +202,13 @@ class BigQueryClient(sqlContext: SQLContext, var bigquery: Bigquery = null) exte
     new JobReference().setProjectId(projectId).setJobId(fullJobId)
   }
 
-  def getLatestModifiedTime(tableReference: TableReference): BigInteger = {
-    val table = bigquery.tables().get(tableReference.getProjectId,tableReference.getDatasetId,tableReference.getTableId).execute()
-    table.getLastModifiedTime()
+  def getLatestModifiedTime(tableReference: TableReference): Option[BigInteger] = {
+    try {
+      val table = bigquery.tables().get(tableReference.getProjectId, tableReference.getDatasetId, tableReference.getTableId).execute()
+      Some(table.getLastModifiedTime())
+    }  catch {
+      case e: Exception => None
+    }
   }
 
   def getTableSchema(tableReference: TableReference): TableSchema = {
