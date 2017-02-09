@@ -102,9 +102,8 @@ import com.samelamin.spark.bigquery._
 
 val df = spark.readStream.json("s3a://bucket")
 
-df.writeStream
-      .option("checkpointLocation", "s3a://checkpoint/dir")
-      .option("tableReferenceSink","my-project:my_dataset.my_table")
+df.readStream
+      .option("tableReferenceSource","my-project:my_dataset.my_table")
       .format("com.samelamin.spark.bigquery")
       .start()
 ```
@@ -112,7 +111,7 @@ You can also specify a custom timestamp column:
 ```scala
 import com.samelamin.spark.bigquery._
 
-sqlContext.setBQTableTimestampColumn('column name')
+sqlContext.setBQTableTimestampColumn("column_name")
 ```
 
 ### Saving DataFrame using BigQuery Hadoop writer API
