@@ -100,12 +100,11 @@ You can use this connector to stream from a BigQuery Table. The connector uses a
 ```scala
 import com.samelamin.spark.bigquery._
 
-val df = spark.readStream.json("s3a://bucket")
-
-df.readStream
-      .option("tableReferenceSource","my-project:my_dataset.my_table")
-      .format("com.samelamin.spark.bigquery")
-      .start()
+val df = spark
+          .readStream
+          .option("tableReferenceSource","my-project:my_dataset.my_table")
+          .format("com.samelamin.spark.bigquery")
+          .load()
 ```
 You can also specify a custom timestamp column: 
 ```scala
