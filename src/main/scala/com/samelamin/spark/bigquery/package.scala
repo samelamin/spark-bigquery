@@ -15,8 +15,8 @@ import org.apache.avro.generic.GenericData
 import com.google.cloud.hadoop.io.bigquery.AvroBigQueryInputFormat
 import com.samelamin.spark.bigquery.converters.{BigQueryAdapter, SchemaConverters}
 import org.apache.avro.Schema
-
 import scala.util.Random
+
 /**
   * Created by sam elamin on 28/01/2017.
   */
@@ -53,6 +53,10 @@ package object bigquery {
     def setGSProjectId(projectId: String): Unit = {
       // Also set project ID for GCS connector
       hadoopConf.set("fs.gs.project.id", projectId)
+    }
+
+    def setBQTableTimestampColumn(timestampColumn: String): Unit = {
+      hadoopConf.set("timestamp_column", timestampColumn)
     }
 
     /**

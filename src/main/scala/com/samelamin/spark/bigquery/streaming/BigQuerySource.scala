@@ -1,7 +1,6 @@
 package com.samelamin.spark.bigquery.streaming
 
 import java.math.BigInteger
-
 import com.google.cloud.hadoop.io.bigquery.BigQueryStrings
 import com.samelamin.spark.bigquery.BigQueryClient
 import org.apache.spark.sql.{DataFrame, SQLContext}
@@ -9,7 +8,9 @@ import org.apache.spark.sql.execution.streaming.{Offset, _}
 import org.apache.spark.sql.types.{BinaryType, StringType, StructField, StructType}
 import com.samelamin.spark.bigquery._
 import com.samelamin.spark.bigquery.converters.SchemaConverters
+import org.joda.time.DateTime
 import org.slf4j.LoggerFactory
+
 /**
   * Created by sam elamin on 29/01/2017.
   */
@@ -18,7 +19,7 @@ import org.slf4j.LoggerFactory
   val hadoopConfiguration = sqlContext.sparkContext.hadoopConfiguration
   private val logger = LoggerFactory.getLogger(classOf[BigQuerySource])
   val fullyQualifiedOutputTableId = options.get("tableReferenceSource").get
-
+  val timestampColumn = sqlContext.hadoopConf.get("timestamp_column","bq_load_timestamp")
   /** Returns the schema of the data from this source */
   override def schema: StructType = {
     BigQuerySource.DEFAULT_SCHEMA
@@ -36,10 +37,10 @@ import org.slf4j.LoggerFactory
     * same data for a particular `start` and `end` pair.
     */
   override def getBatch(start: Option[Offset], end: Offset): DataFrame = {
-
     val startIndex = start.getOrElse(LongOffset(0L)).asInstanceOf[LongOffset].offset.toLong
     val endIndex = end.asInstanceOf[LongOffset].offset.toLong
-
+    val startPartitionTime = new DateTime(startIndex).toLocalDate
+    val endPartitionTime = new DateTime(endIndex).toLocalDate.toString
     logger.info(s"Fetching data between $startIndex and $endIndex")
     val query =
       s"""
@@ -48,8 +49,9 @@ import org.slf4j.LoggerFactory
          |FROM
          |  `${fullyQualifiedOutputTableId.replace(':','.')}`
          |WHERE
-         |  _PARTITION_LOAD_TIME BETWEEN TIMESTAMP_MILLIS($startIndex) AND TIMESTAMP_MILLIS($endIndex)
-         |""".stripMargin
+         |  $timestampColumn BETWEEN TIMESTAMP_MILLIS($startIndex) AND TIMESTAMP_MILLIS($endIndex)
+         |  AND _PARTITIONTIME BETWEEN TIMESTAMP('$startPartitionTime') AND TIMESTAMP('$endPartitionTime')
+         |  """.stripMargin
 
     val df = sqlContext.bigQuerySelect(query)
     df

@@ -3,6 +3,7 @@ package com.samelamin.spark.bigquery.streaming
 import org.apache.hadoop.fs.Path
 import org.apache.spark.sql.{SaveMode, SparkSession}
 import org.apache.spark.sql.functions._
+
 /**
   * Created by sam elamin on 08/02/2017.
   */
@@ -29,5 +30,3 @@ class BigQuerySinkLog(sparkSession: SparkSession, path: String) {
     df.write.mode(SaveMode.Overwrite).json(logPath)
   }
 }
-
-

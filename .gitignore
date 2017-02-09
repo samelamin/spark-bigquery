@@ -24,6 +24,7 @@ Thumbs.db
 
 # maven target files
 target/
+metastore_db/
 **/target/
 
 /sonatype.sbt
