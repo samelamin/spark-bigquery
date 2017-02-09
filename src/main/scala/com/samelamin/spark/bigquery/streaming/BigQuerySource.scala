@@ -24,9 +24,8 @@ import org.slf4j.LoggerFactory
     BigQuerySource.DEFAULT_SCHEMA
   }
 
-  var currentOffset = 0l
   override def getOffset: Option[Offset] = {
-    val lastModified: BigInteger = sqlContext.getLatestBQModifiedTime(fullyQualifiedOutputTableId)
+    val lastModified = sqlContext.getLatestBQModifiedTime(fullyQualifiedOutputTableId).getOrElse(BigInteger.ZERO)
     logger.info(s"$fullyQualifiedOutputTableId was last updated on ${lastModified.longValue()}")
     Some(LongOffset(lastModified.longValue()))
   }

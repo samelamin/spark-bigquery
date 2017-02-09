@@ -100,7 +100,7 @@ package object bigquery {
       sqlContext.createDataFrame(tableData.map(converter), structType)
     }
 
-    def getLatestBQModifiedTime(tableReference: String): BigInteger = {
+    def getLatestBQModifiedTime(tableReference: String): Option[BigInteger] = {
       bq.getLatestModifiedTime(BigQueryStrings.parseTableReference(tableReference))
     }
 
