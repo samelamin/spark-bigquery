@@ -93,9 +93,30 @@ df.writeStream
       .start()
 ```
 
+### Structured Streaming from BigQuery Table
+
+You can use this connector to stream from a BigQuery Table. The connector uses a Timestamped column to get offsets. 
+
+```scala
+import com.samelamin.spark.bigquery._
+
+val df = spark.readStream.json("s3a://bucket")
+
+df.writeStream
+      .option("checkpointLocation", "s3a://checkpoint/dir")
+      .option("tableReferenceSink","my-project:my_dataset.my_table")
+      .format("com.samelamin.spark.bigquery")
+      .start()
+```
+You can also specify a custom timestamp column: 
+```scala
+import com.samelamin.spark.bigquery._
+
+sqlContext.setBQTableTimestampColumn('column name')
+```
 
 ### Saving DataFrame using BigQuery Hadoop writer API
-
+By Default any table created by this connector has a timestamp column of `bq_load_timestamp` which has the value of the current timestamp.
 ```scala
 import com.samelamin.spark.bigquery._
 
@@ -131,7 +152,8 @@ sqlContext.setAllowSchemaUpdates()
 Notes on using this API:
 
  * Target data set must already exist
- * Structured Streaming needs a partitioned table
+ * Structured Streaming needs a partitioned table which is created by default when writing a stream
+ * Structured Streaming needs a timestamp column where offsets are retrieved from, by default all tables are created with a `bq_load_timestamp` column with a default value of the current timstamp.
  * Structured Streaming currently does not support schema updates
  * For use with Databricks please follow this [guide](https://github.com/samelamin/spark-bigquery/blob/master/Databricks.md)
 # License
