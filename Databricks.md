@@ -8,7 +8,7 @@ First and most important is that the Google BQ client expects an Env variable wi
 You can add that via a init scipt, save it inside the /databricks/init/ folder, 
 For this example im saving the file to:
 
-`/databricks/Justeat-platform-events-c750aee2059a.json`
+`/databricks/{google-json-credentials-file}.json`
 
 Once you save the file locally use the databricks [api](https://docs.databricks.com/release-notes/product/2.30.html#set-environmental-variables-in-spark-from-rest-api) to launch a cluster with an env variable set up
 You can use this curl command to do that 
@@ -21,7 +21,7 @@ POST \ -u username:passord url-of-databricks-instance:443/api/2.0/clusters/creat
  "spark_version": "1.6.1-ubuntu15.10-hadoop1", 
  "num_workers" : 1, 
  "spark_conf" : { "spark.speculation" : true }, 
- "spark_env_vars" : {"GOOGLE_APPLICATION_CREDENTIALS" :"/databricks/Justeat-platform-events-c750aee2059a.json"} 
+ "spark_env_vars" : {"GOOGLE_APPLICATION_CREDENTIALS" :"/databricks/{google-json-credentials-file}.json"} 
  }'
 
 ```
