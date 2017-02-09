@@ -18,7 +18,6 @@ package com.samelamin.spark.bigquery.converters
  */
 import java.nio.ByteBuffer
 import java.util.HashMap
-
 import com.google.api.services.bigquery.model.{TableFieldSchema, TableSchema}
 import org.apache.avro.Schema
 import org.apache.avro.Schema.Type._
@@ -29,9 +28,9 @@ import org.apache.spark.sql.types._
 import org.json4s.JsonAST.{JArray, JValue}
 import org.json4s.JsonDSL._
 import org.json4s.jackson.JsonMethods.{pretty, render}
-
 import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
+
 /**
   * Builds BigQuery input JSON schema based on DataFrame.
   * Example schema can be found here: https://cloud.google.com/bigquery/docs/personsDataSchema.json

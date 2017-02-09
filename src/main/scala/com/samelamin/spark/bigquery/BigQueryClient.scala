@@ -3,7 +3,6 @@ package com.samelamin.spark.bigquery
 import java.math.BigInteger
 import java.util.UUID
 import java.util.concurrent.TimeUnit
-
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential
 import com.google.api.client.googleapis.json.GoogleJsonResponseException
 import com.google.api.client.http.javanet.NetHttpTransport

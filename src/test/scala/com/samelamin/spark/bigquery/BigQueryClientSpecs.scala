@@ -1,7 +1,6 @@
 package com.samelamin.spark.bigquery
 
 import java.io.File
-
 import com.google.api.services.bigquery.Bigquery
 import com.google.api.services.bigquery.model._
 import com.google.cloud.hadoop.io.bigquery._
@@ -13,6 +12,7 @@ import org.mockito.Matchers.{any, eq => mockitoEq}
 import org.mockito.Mockito._
 import org.scalatest.FeatureSpec
 import org.scalatest.mock.MockitoSugar
+
 /**
   * Createdby sam elamin on 1/12/17.
   */

@@ -2,6 +2,7 @@ package com.samelamin.spark.bigquery
 
 import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.{DataFrame, DataFrameReader}
+
 /**
   * Created by sam elamin on 29/01/2017.
   */
