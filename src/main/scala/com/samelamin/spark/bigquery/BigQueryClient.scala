@@ -12,12 +12,13 @@ import com.google.api.services.bigquery.{Bigquery, BigqueryScopes}
 import com.google.cloud.hadoop.io.bigquery._
 import com.google.common.cache.{CacheBuilder, CacheLoader, LoadingCache}
 import com.google.gson.JsonParser
-import com.samelamin.spark.bigquery.utils.BigQueryPartitionUtils
+import com.samelamin.spark.bigquery.utils.{BigQueryPartitionUtils, EnvHacker}
 import org.apache.hadoop.util.Progressable
 import org.apache.spark.sql._
 import org.joda.time.Instant
 import org.joda.time.format.DateTimeFormat
 import org.slf4j.LoggerFactory
+
 import scala.collection.JavaConverters._
 import scala.util.Random
 import scala.util.control.NonFatal
@@ -31,6 +32,7 @@ object BigQueryClient {
   private var instance: BigQueryClient = null
 
   def getInstance(sqlContext: SQLContext): BigQueryClient = {
+    setGoogleBQEnvVariable(sqlContext)
     if (instance == null) {
       val bigquery = {
         val credential = GoogleCredential.getApplicationDefault.createScoped(SCOPES)
@@ -42,6 +44,13 @@ object BigQueryClient {
     }
     instance
   }
+
+  private def setGoogleBQEnvVariable(sqlContext: SQLContext):Unit = {
+    val bqKeyPath = sqlContext.sparkContext.hadoopConfiguration.get("fs.gs.auth.service.account.json.keyfile")
+    val myJavaMap = Map[String, String]("GOOGLE_APPLICATION_CREDENTIALS" -> bqKeyPath)
+    EnvHacker.setEnv(myJavaMap)
+  }
+
 }
 
 class BigQueryClient(sqlContext: SQLContext, var bigquery: Bigquery = null) extends Serializable  {
