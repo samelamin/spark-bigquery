@@ -9,6 +9,10 @@ The project was inspired by [spotify/spark-bigquery](https://github.com/spotify/
 
 * Use of the Structured Streaming API on Spark 2.1
 
+* Allow saving to partitioned tables
+
+* Update schemas on writes using the [setSchemaUpdateOptions](https://developers.google.com/resources/api-libraries/documentation/bigquery/v2/java/latest/com/google/api/services/bigquery/model/JobConfigurationQuery.html#setSchemaUpdateOptions(java.util.List))
+
 * JSON is used as an intermediate format instead of Avro. This allows having fields on different levels named the same:
 
 ```json
@@ -26,8 +30,6 @@ The project was inspired by [spotify/spark-bigquery](https://github.com/spotify/
   2. Field names are converted to lower case to avoid ambiguity
   3. Duplicate field names are given a numeric suffix (`_1`, `_2`, etc.)
   
- * Update schemas on writes using the [setSchemaUpdateOptions](https://developers.google.com/resources/api-libraries/documentation/bigquery/v2/java/latest/com/google/api/services/bigquery/model/JobConfigurationQuery.html#setSchemaUpdateOptions(java.util.List))
- 
 ## Usage
 
 ### Including spark-bigquery into your project
