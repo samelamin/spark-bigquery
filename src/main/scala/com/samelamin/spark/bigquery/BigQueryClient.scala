@@ -30,7 +30,6 @@ object BigQueryClient {
   val TIME_FORMATTER = DateTimeFormat.forPattern("yyyyMMddHHmmss")
   private val SCOPES = List(BigqueryScopes.BIGQUERY).asJava
   private var instance: BigQueryClient = null
-
   def getInstance(sqlContext: SQLContext): BigQueryClient = {
     setGoogleBQEnvVariable(sqlContext)
     if (instance == null) {
@@ -47,10 +46,11 @@ object BigQueryClient {
 
   private def setGoogleBQEnvVariable(sqlContext: SQLContext):Unit = {
     val bqKeyPath = sqlContext.sparkContext.hadoopConfiguration.get("fs.gs.auth.service.account.json.keyfile")
-    val myJavaMap = Map[String, String]("GOOGLE_APPLICATION_CREDENTIALS" -> bqKeyPath)
-    EnvHacker.setEnv(myJavaMap)
+    if(bqKeyPath != null) {
+      val myJavaMap = Map[String, String]("GOOGLE_APPLICATION_CREDENTIALS" -> bqKeyPath)
+      EnvHacker.setEnv(myJavaMap)
+    }
   }
-
 }
 
 class BigQueryClient(sqlContext: SQLContext, var bigquery: Bigquery = null) extends Serializable  {
