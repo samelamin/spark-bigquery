@@ -46,6 +46,7 @@ object SchemaConverters {
   private def getTypeName(dataType: DataType) = {
     dataType match {
       case ByteType | ShortType | IntegerType | LongType => "INTEGER"
+      case StringType => "STRING"
       case FloatType | DoubleType => "FLOAT"
       case _: DecimalType => "FLOAT"
       case BinaryType => "BYTES"
