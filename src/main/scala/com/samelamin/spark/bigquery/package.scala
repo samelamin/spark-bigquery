@@ -132,6 +132,7 @@ package object bigquery {
       */
     def saveAsBigQueryTable(fullyQualifiedOutputTableId: String,
                             isPartitionedByDay: Boolean = false,
+                            timePartitionExpiration: Long = 0,
                             writeDisposition: WriteDisposition.Value = null,
                             createDisposition: CreateDisposition.Value = null): Unit = {
 
@@ -142,6 +143,7 @@ package object bigquery {
         bigQuerySchema,
         gcsPath,
         isPartitionedByDay,
+        timePartitionExpiration,
         writeDisposition,
         createDisposition)
       delete(new Path(gcsPath))
