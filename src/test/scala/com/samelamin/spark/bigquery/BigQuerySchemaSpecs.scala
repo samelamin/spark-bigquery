@@ -4,6 +4,7 @@ import com.holdenkarau.spark.testing.DataFrameSuiteBase
 import org.scalatest.Matchers._
 import org.scalatest.{FeatureSpec, GivenWhenThen}
 import com.samelamin.spark.bigquery.converters._
+import org.apache.spark.sql.types.{DateType, DecimalType, StructType}
 
 class BigQuerySchemaSpecs extends FeatureSpec with GivenWhenThen with DataFrameSuiteBase {
   feature("Schema Converters. Dataframe To BQ Schema") {
@@ -34,6 +35,7 @@ class BigQuerySchemaSpecs extends FeatureSpec with GivenWhenThen with DataFrameS
       tableSchema should be (expectedSchema)
 
     }
+
     scenario("When converting a complex dataframe with nested data") {
       Given("A dataframe")
       val sqlCtx = sqlContext
@@ -139,6 +141,34 @@ class BigQuerySchemaSpecs extends FeatureSpec with GivenWhenThen with DataFrameS
                              |  } ]
                              |} ]
                              |""".stripMargin.trim
+      tableSchema should be (expectedSchema)
+    }
+
+    scenario("When converting from more obscure types") {
+
+      Given("A dataframe")
+
+      val eventSchema = (new StructType).add("event_day", DateType).add("event_value", DecimalType.USER_DEFAULT)
+      val eventJsonRDD = sc.parallelize("""{"event_day":"20160102", "event_value":"123.1234"}""" :: Nil )
+
+      val df = sqlContext.read.schema(eventSchema).json(eventJsonRDD)
+
+      When("Passing the schema to the converter")
+	  val tableSchema = SchemaConverters.SqlToBQSchema(df)
+
+      Then("We should receive a BQ Table Schema")
+      val expectedSchema = """[ {
+                             |  "name" : "event_day",
+                             |  "mode" : "NULLABLE",
+                             |  "type" : "DATE"
+                             |}, {
+                             |  "name" : "event_value",
+                             |  "mode" : "NULLABLE",
+                             |  "type" : "FLOAT"
+                             |} ]
+                             |""".stripMargin.trim
+
+      tableSchema should not be null
       tableSchema should be (expectedSchema)
     }
   }

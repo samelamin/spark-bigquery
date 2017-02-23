@@ -65,7 +65,6 @@ class BigQueryClient(sqlContext: SQLContext, var bigquery: Bigquery = null) exte
   val STAGING_DATASET_LOCATION_DEFAULT = "US"
   val STAGING_DATASET_TABLE_EXPIRATION_MS = 86400000L
   val STAGING_DATASET_DESCRIPTION = "Spark BigQuery staging dataset"
-  val DEFAULT_TABLE_EXPIRATION_MS = 259200000L
   val ALLOW_SCHEMA_UPDATES = "ALLOW_SCHEMA_UPDATES"
   val USE_STANDARD_SQL_DIALECT = "USE_STANDARD_SQL_DIALECT"
   private val logger = LoggerFactory.getLogger(classOf[BigQueryClient])
@@ -80,10 +79,11 @@ class BigQueryClient(sqlContext: SQLContext, var bigquery: Bigquery = null) exte
            bigQuerySchema: String,
            gcsPath: String,
            isPartitionedByDay: Boolean = false,
+           timePartitionExpiration: Long = 0,
            writeDisposition: WriteDisposition.Value = null,
            createDisposition: CreateDisposition.Value = null): Unit = {
     if(isPartitionedByDay) {
-      BigQueryPartitionUtils.createBigQueryPartitionedTable(destinationTable)
+      BigQueryPartitionUtils.createBigQueryPartitionedTable(destinationTable,timePartitionExpiration)
     }
     val tableSchema = new TableSchema().setFields(BigQueryUtils.getSchemaFromString(bigQuerySchema))
     val allow_schema_updates = hadoopConf.get(ALLOW_SCHEMA_UPDATES,"false").toBoolean
