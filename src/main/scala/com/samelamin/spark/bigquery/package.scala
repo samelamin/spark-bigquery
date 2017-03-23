@@ -111,6 +111,27 @@ package object bigquery {
     def getBigQuerySchema(tableReference: String): StructType = {
       SchemaConverters.BQToSQLSchema(bq.getTableSchema(BigQueryStrings.parseTableReference(tableReference)))
     }
+
+
+    /**
+      * Load a BigQuery table as a [[DataFrame]].
+      */
+    def bigQueryTable(tableSpec: String): DataFrame = {
+      val tableRef = BigQueryStrings.parseTableReference(tableSpec)
+      BigQueryConfiguration.configureBigQueryInput(
+        hadoopConf, tableRef.getProjectId, tableRef.getDatasetId, tableRef.getTableId)
+      val tableData = sqlContext.sparkContext.newAPIHadoopRDD(
+        hadoopConf,
+        classOf[AvroBigQueryInputFormat],
+        classOf[LongWritable],
+        classOf[GenericData.Record]).map(x=>x._2)
+      val schemaString = tableData.map(_.getSchema.toString).first()
+      val schema = new Schema.Parser().parse(schemaString)
+      val structType = SchemaConverters.avroToSqlType(schema).dataType.asInstanceOf[StructType]
+      val converter = SchemaConverters.createConverterToSQL(schema)
+        .asInstanceOf[GenericData.Record => Row]
+      sqlContext.createDataFrame(tableData.map(converter), structType)
+    }
   }
   implicit class BigQueryDataFrame(self: DataFrame) extends Serializable {
     val adaptedDf = BigQueryAdapter(self)
