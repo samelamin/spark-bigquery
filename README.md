@@ -13,6 +13,8 @@ The project was inspired by [spotify/spark-bigquery](https://github.com/spotify/
 
 * Easy integration with [Databricks](https://github.com/samelamin/spark-bigquery/blob/master/Databricks.md)
 
+* Use of Standard SQL
+
 * Update schemas on writes using the [setSchemaUpdateOptions](https://developers.google.com/resources/api-libraries/documentation/bigquery/v2/java/latest/com/google/api/services/bigquery/model/JobConfigurationQuery.html#setSchemaUpdateOptions(java.util.List))
 
 * JSON is used as an intermediate format instead of Avro. This allows having fields on different levels named the same:
