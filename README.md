@@ -33,7 +33,11 @@ The project was inspired by [spotify/spark-bigquery](https://github.com/spotify/
   1. Illegal characters are replaced with `_`
   2. Field names are converted to lower case to avoid ambiguity
   3. Duplicate field names are given a numeric suffix (`_1`, `_2`, etc.)
-  
+
+
+### Docker! 
+I created a container that launches zepplin with spark and the connector for ease of use and quick startup. You can find it [here](https://github.com/samelamin/docker-zeppelin)
+
 ## Usage
 
 ### Including spark-bigquery into your project
