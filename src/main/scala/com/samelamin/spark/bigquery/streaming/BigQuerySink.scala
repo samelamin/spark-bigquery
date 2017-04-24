@@ -15,7 +15,8 @@ import org.apache.hadoop.fs.Path
 class BigQuerySink(sparkSession: SparkSession, path: String, options: Map[String, String]) extends Sink {
   private val logger = LoggerFactory.getLogger(classOf[BigQuerySink])
   private val basePath = new Path(path)
-  private val logPath = new Path(basePath, BigQuerySink.metadataDir)
+  private val logPath = new Path(basePath, new Path(BigQuerySink.metadataDir,"transaction.json"))
+
   private val fileLog = new BigQuerySinkLog(sparkSession, logPath.toUri.toString)
   override def addBatch(batchId: Long, data: DataFrame): Unit = {
     if (batchId <= fileLog.getLatest().getOrElse(-1L)) {
