@@ -11,8 +11,25 @@ object EnvHacker {
       val processEnvironmentClass = Class.forName("java.lang.ProcessEnvironment")
       val theEnvironmentField = processEnvironmentClass.getDeclaredField("theEnvironment")
       theEnvironmentField.setAccessible(true)
-      val env = theEnvironmentField.get(null).asInstanceOf[JavaMap[String, String]]
-      env.putAll(newEnv)
+
+      val variableClass = Class.forName("java.lang.ProcessEnvironment$Variable")
+      val convertToVariable = variableClass.getMethod("valueOf", classOf[java.lang.String])
+      convertToVariable.setAccessible(true)
+
+      val valueClass = Class.forName("java.lang.ProcessEnvironment$Value")
+      val convertToValue = valueClass.getMethod("valueOf", classOf[java.lang.String])
+      convertToValue.setAccessible(true)
+
+      val sampleVariable = convertToVariable.invoke(null, "")
+      val sampleValue = convertToValue.invoke(null, "")
+      val env = theEnvironmentField.get(null).asInstanceOf[JavaMap[sampleVariable.type, sampleValue.type]]
+      newEnv.foreach { case (k, v) => {
+          val variable = convertToVariable.invoke(null, k).asInstanceOf[sampleVariable.type]
+          val value = convertToValue.invoke(null, v).asInstanceOf[sampleValue.type]
+          env.put(variable, value)
+        }
+      }
+
       val theCaseInsensitiveEnvironmentField = processEnvironmentClass.getDeclaredField("theCaseInsensitiveEnvironment")
       theCaseInsensitiveEnvironmentField.setAccessible(true)
       val cienv = theCaseInsensitiveEnvironmentField.get(null).asInstanceOf[JavaMap[String, String]]
@@ -28,7 +45,6 @@ object EnvHacker {
               field.setAccessible(true)
               val obj = field.get(env)
               val map = obj.asInstanceOf[JavaMap[String, String]]
-              map.clear()
               map.putAll(newEnv)
             }
           }
