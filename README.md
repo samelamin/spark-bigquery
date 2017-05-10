@@ -60,7 +60,7 @@ I created a container that launches zepplin with spark and the connector for eas
   <dependency>
     <groupId>com.github.samelamin</groupId>
     <artifactId>spark-bigquery_${scala.binary.version}</artifactId>
-    <version>0.1.5</version>
+    <version>0.1.6</version>
   </dependency>
 </dependencies>
 ```
@@ -71,7 +71,7 @@ To use it in a local SBT console first add the package as a dependency then set 
 ```sbt
 resolvers += Opts.resolver.sonatypeReleases
 
-libraryDependencies += "com.github.samelamin" %% "spark-bigquery" % "0.1.5"
+libraryDependencies += "com.github.samelamin" %% "spark-bigquery" % "0.1.6"
 ```
 
 ```scala
