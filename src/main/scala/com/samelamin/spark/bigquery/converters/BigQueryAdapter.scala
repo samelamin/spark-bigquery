@@ -14,7 +14,7 @@ import org.apache.spark.sql.types._
 object BigQueryAdapter {
 
   private def adaptName(name: String, siblings: Array[String]): String = {
-    var newName = name.replaceAll("\\W", "_").toLowerCase
+    var newName = name.replaceAll("\\W", "_")
     if (!newName.equals(name)) {
       // Avoid duplicates:
       var counter = 1;
