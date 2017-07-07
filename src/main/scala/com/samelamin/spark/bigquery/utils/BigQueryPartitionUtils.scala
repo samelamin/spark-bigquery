@@ -15,7 +15,7 @@ object BigQueryPartitionUtils {
   val DEFAULT_TABLE_EXPIRATION_MS = 259200000L
   val bqService = BigQueryServiceFactory.getService
 
-  def createBigQueryPartitionedTable(targetTable: TableReference, timePartitionExpiration: Long): Any = {
+  def createBigQueryPartitionedTable(targetTable: TableReference, timePartitionExpiration: Long = 0): Any = {
     val datasetId = targetTable.getDatasetId
     val projectId: String = targetTable.getProjectId
     val tableName = targetTable.getTableId
