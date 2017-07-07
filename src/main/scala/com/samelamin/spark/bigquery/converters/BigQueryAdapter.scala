@@ -1,6 +1,9 @@
 package com.samelamin.spark.bigquery.converters
 
-import org.apache.spark.sql.DataFrame
+import org.apache.spark.rdd.RDD
+import org.apache.spark.sql.catalyst.InternalRow
+import org.apache.spark.sql.catalyst.encoders.RowEncoder
+import org.apache.spark.sql.{DataFrame, Row}
 import org.apache.spark.sql.functions.current_timestamp
 import org.apache.spark.sql.types._
 
@@ -43,12 +46,16 @@ object BigQueryAdapter {
   }
 
   def apply(df: DataFrame): DataFrame = {
-    val timestampColumn = df
-      .sparkSession
-      .sparkContext
+    val sqlContext = df.sparkSession.sqlContext
+    val sparkContext = df.sparkSession.sparkContext
+    val timestampColumn = sparkContext
       .hadoopConfiguration.get("timestamp_column","bq_load_timestamp")
-
     val newDf = df.withColumn(timestampColumn,current_timestamp())
-    newDf.sqlContext.createDataFrame(newDf.rdd, adaptType(newDf.schema).asInstanceOf[StructType])
+    val newSchema = adaptType(newDf.schema).asInstanceOf[StructType]
+    val encoder = RowEncoder.apply(newSchema).resolveAndBind()
+    val encodedDF = df
+      .queryExecution
+      .toRdd.map(x=>encoder.fromRow(x))
+   sqlContext.createDataFrame(encodedDF,newSchema)
   }
 }
