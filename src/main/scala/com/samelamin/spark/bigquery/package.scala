@@ -27,7 +27,7 @@ package object bigquery {
   implicit class BigQuerySQLContext(sqlContext: SQLContext) extends Serializable {
     lazy val bq = BigQueryClient.getInstance(sqlContext)
     @transient
-    lazy val hadoopConf = sqlContext.sparkContext.hadoopConfiguration
+    lazy val hadoopConf = sqlContext.sparkSession.sparkContext.hadoopConfiguration
     private val logger = LoggerFactory.getLogger(classOf[BigQueryClient])
 
     /**
@@ -91,7 +91,7 @@ package object bigquery {
 
     def bigQuerySelect(sqlQuery: String): DataFrame = {
       bq.selectQuery(sqlQuery)
-      val tableData = sqlContext.sparkContext.newAPIHadoopRDD(
+      val tableData = sqlContext.sparkSession.sparkContext.newAPIHadoopRDD(
         hadoopConf,
         classOf[AvroBigQueryInputFormat],
         classOf[LongWritable],
@@ -136,9 +136,7 @@ package object bigquery {
   implicit class BigQueryDataFrame(self: DataFrame) extends Serializable {
     val adaptedDf = BigQueryAdapter(self)
     private val logger = LoggerFactory.getLogger(classOf[BigQueryClient])
-
-    @transient
-    lazy val hadoopConf = self.sqlContext.sparkContext.hadoopConfiguration
+    lazy val hadoopConf = self.sparkSession.sparkContext.hadoopConfiguration
     lazy val bq = BigQueryClient.getInstance(self.sqlContext)
 
     @transient
