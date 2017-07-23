@@ -136,6 +136,8 @@ package object bigquery {
   implicit class BigQueryDataFrame(self: DataFrame) extends Serializable {
     val adaptedDf = BigQueryAdapter(self)
     private val logger = LoggerFactory.getLogger(classOf[BigQueryClient])
+
+    @transient
     lazy val hadoopConf = self.sparkSession.sparkContext.hadoopConfiguration
     lazy val bq = BigQueryClient.getInstance(self.sqlContext)
 
