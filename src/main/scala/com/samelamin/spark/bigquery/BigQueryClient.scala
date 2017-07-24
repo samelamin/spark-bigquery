@@ -58,6 +58,7 @@ class BigQueryClient(sqlContext: SQLContext, var bigquery: Bigquery = null) exte
   lazy val jsonParser = new JsonParser()
   @transient
   val hadoopConf = sqlContext.sparkContext.hadoopConfiguration
+  val bqPartitonUtils = new BigQueryPartitionUtils(bigquery)
 
   val STAGING_DATASET_PREFIX = "bq.staging_dataset.prefix"
   val STAGING_DATASET_PREFIX_DEFAULT = "spark_bigquery_staging_"
@@ -83,7 +84,7 @@ class BigQueryClient(sqlContext: SQLContext, var bigquery: Bigquery = null) exte
            writeDisposition: WriteDisposition.Value = null,
            createDisposition: CreateDisposition.Value = null): Unit = {
     if(isPartitionedByDay) {
-      BigQueryPartitionUtils.createBigQueryPartitionedTable(destinationTable,timePartitionExpiration)
+      bqPartitonUtils.createBigQueryPartitionedTable(destinationTable,timePartitionExpiration)
     }
     val tableSchema = new TableSchema().setFields(BigQueryUtils.getSchemaFromString(bigQuerySchema))
     val allow_schema_updates = hadoopConf.get(ALLOW_SCHEMA_UPDATES,"false").toBoolean

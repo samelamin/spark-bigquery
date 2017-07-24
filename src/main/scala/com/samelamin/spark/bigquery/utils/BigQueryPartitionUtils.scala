@@ -1,39 +1,56 @@
 package com.samelamin.spark.bigquery.utils
 
 import com.google.api.client.googleapis.json.GoogleJsonResponseException
+import com.google.api.services.bigquery.Bigquery
 import com.google.api.services.bigquery.model.{Table, TableReference, TimePartitioning}
-import com.samelamin.spark.bigquery.BigQueryServiceFactory
+import com.google.cloud.hadoop.io.bigquery.BigQueryStrings
 import org.apache.log4j.LogManager
+
 import scala.util.control.NonFatal
 
 /**
   * Created by sam elamin on 1/9/17.
   */
-object BigQueryPartitionUtils {
+class BigQueryPartitionUtils(bqService: Bigquery)  {
   private val logger = LogManager.getRootLogger()
-
   val DEFAULT_TABLE_EXPIRATION_MS = 259200000L
-  val bqService = BigQueryServiceFactory.getService
 
   def createBigQueryPartitionedTable(targetTable: TableReference, timePartitionExpiration: Long = 0): Any = {
-    val datasetId = targetTable.getDatasetId
-    val projectId: String = targetTable.getProjectId
-    val tableName = targetTable.getTableId
-    try {
-      logger.info("Creating Time Partitioned Table")
+    val fullyQualifiedOutputTableId = BigQueryStrings.toString(targetTable)
+    val decoratorsRegex = ".+?(?=\\$)".r
+    val cleanTableName = BigQueryStrings
+    .parseTableReference(decoratorsRegex.findFirstIn(fullyQualifiedOutputTableId)
+    .getOrElse(fullyQualifiedOutputTableId))
+    val projectId = cleanTableName.getProjectId
+    val datasetId = cleanTableName.getDatasetId
+    val tableId = cleanTableName.getTableId
+    if(doesTableAlreadyExist(projectId,datasetId,tableId)) {
+      return
+    } else {
+      logger.info(s"Creating Table $tableId")
       val table = new Table()
-      table.setTableReference(targetTable)
+      table.setTableReference(cleanTableName)
       val timePartitioning = new TimePartitioning()
       timePartitioning.setType("DAY")
       table.setTimePartitioning(timePartitioning)
-      if(timePartitionExpiration > 0){
+      if (timePartitionExpiration > 0) {
         table.setExpirationTime(timePartitionExpiration)
       }
-      val request = bqService.tables().insert(projectId, datasetId, table)
+      val request = bqService.tables().insert(cleanTableName.getProjectId, cleanTableName.getDatasetId, table)
       val response = request.execute()
+      logger.info(s"Table $tableId created")
+    }
+
+  }
+
+  def doesTableAlreadyExist(projectId: String, datasetId: String, tableId: String): Boolean = {
+    try {
+      bqService.tables().get(projectId,datasetId,tableId).execute()
+      return true
     } catch {
-      case e: GoogleJsonResponseException if e.getStatusCode == 409 =>
-        logger.info(s"$projectId:$datasetId.$tableName already exists")
+      case e: GoogleJsonResponseException if e.getStatusCode == 404 =>
+        logger.info(s"$projectId:$datasetId.$tableId does not exist")
+        return false
       case NonFatal(e) => throw e
     }
   }
