@@ -21,6 +21,8 @@ import scala.util.Random
   * Created by sam elamin on 28/01/2017.
   */
 package object bigquery {
+
+  private var storage_bucket:Option[String] = None
   implicit def toDataFrameWriterFunctions(dfw: DataFrameWriter[Row]): DataFrameWriterFunctions =
     new DataFrameWriterFunctions(dfw)
 
@@ -62,8 +64,12 @@ package object bigquery {
     /**
       * Set GCS bucket for temporary BigQuery files.
       */
-    def setBigQueryGcsBucket(gcsBucket: String): Unit =
+    def setBigQueryGcsBucket(gcsBucket: String): Unit = {
       hadoopConf.set(BigQueryConfiguration.GCS_BUCKET_KEY, gcsBucket)
+      if(storage_bucket.isEmpty) {
+        storage_bucket = Some(gcsBucket)
+      }
+    }
 
     /**
       * Set BigQuery dataset location, e.g. US, EU.
@@ -177,7 +183,7 @@ package object bigquery {
 
       BigQueryConfiguration.configureBigQueryOutput(hadoopConf, tableName, bigQuerySchema)
       hadoopConf.set("mapreduce.job.outputformat.class", classOf[BigQueryOutputFormat[_, _]].getName)
-      val bucket = hadoopConf.get(BigQueryConfiguration.GCS_BUCKET_KEY)
+      val bucket = storage_bucket.getOrElse(hadoopConf.get(BigQueryConfiguration.GCS_BUCKET_KEY))
       val temp = s"spark-bigquery-${System.currentTimeMillis()}=${Random.nextInt(Int.MaxValue)}"
       val gcsPath = s"gs://$bucket/hadoop/tmp/spark-bigquery/$temp"
       hadoopConf.set(BigQueryConfiguration.TEMP_GCS_PATH_KEY, gcsPath)
