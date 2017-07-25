@@ -23,8 +23,9 @@ class BigQuerySink(sparkSession: SparkSession, path: String, options: Map[String
       logger.info(s"Skipping already committed batch $batchId")
     } else {
       val fullyQualifiedOutputTableId = options.get("tableReferenceSink").get
+      val bucket: Option[String] = options.get("gcsBucket")
       val isPartitionByDay = Try(options.get("partitionByDay").get.toBoolean).getOrElse(true)
-      data.saveAsBigQueryTable(fullyQualifiedOutputTableId, isPartitionByDay)
+      data.saveAsBigQueryTable(fullyQualifiedOutputTableId, isPartitionByDay,gcsBucket = bucket)
       fileLog.writeBatch(batchId)
     }
   }

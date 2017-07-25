@@ -21,8 +21,6 @@ import scala.util.Random
   * Created by sam elamin on 28/01/2017.
   */
 package object bigquery {
-
-  private var storage_bucket:Option[String] = None
   implicit def toDataFrameWriterFunctions(dfw: DataFrameWriter[Row]): DataFrameWriterFunctions =
     new DataFrameWriterFunctions(dfw)
 
@@ -66,9 +64,6 @@ package object bigquery {
       */
     def setBigQueryGcsBucket(gcsBucket: String): Unit = {
       hadoopConf.set(BigQueryConfiguration.GCS_BUCKET_KEY, gcsBucket)
-      if(storage_bucket.isEmpty) {
-        storage_bucket = Some(gcsBucket)
-      }
     }
 
     /**
@@ -161,11 +156,12 @@ package object bigquery {
                             isPartitionedByDay: Boolean = false,
                             timePartitionExpiration: Long = 0,
                             writeDisposition: WriteDisposition.Value = null,
-                            createDisposition: CreateDisposition.Value = null): Unit = {
+                            createDisposition: CreateDisposition.Value = null,
+                            gcsBucket:Option[String] = None): Unit = {
 
       val destinationTable = BigQueryStrings.parseTableReference(fullyQualifiedOutputTableId)
       val bigQuerySchema = SchemaConverters.SqlToBQSchema(adaptedDf)
-      val gcsPath = writeDFToGoogleStorage(adaptedDf,destinationTable,bigQuerySchema)
+      val gcsPath = writeDFToGoogleStorage(adaptedDf,destinationTable,bigQuerySchema,gcsBucket)
       bq.load(destinationTable,
         bigQuerySchema,
         gcsPath,
@@ -178,12 +174,13 @@ package object bigquery {
 
     def writeDFToGoogleStorage(adaptedDf: DataFrame,
                                destinationTable: TableReference,
-                               bigQuerySchema: String): String = {
+                               bigQuerySchema: String,
+                               gcsBucket:Option[String] = None): String = {
       val tableName = BigQueryStrings.toString(destinationTable)
 
       BigQueryConfiguration.configureBigQueryOutput(hadoopConf, tableName, bigQuerySchema)
       hadoopConf.set("mapreduce.job.outputformat.class", classOf[BigQueryOutputFormat[_, _]].getName)
-      val bucket = storage_bucket.getOrElse(hadoopConf.get(BigQueryConfiguration.GCS_BUCKET_KEY))
+      val bucket = gcsBucket.getOrElse(hadoopConf.get(BigQueryConfiguration.GCS_BUCKET_KEY))
       val temp = s"spark-bigquery-${System.currentTimeMillis()}=${Random.nextInt(Int.MaxValue)}"
       val gcsPath = s"gs://$bucket/hadoop/tmp/spark-bigquery/$temp"
       hadoopConf.set(BigQueryConfiguration.TEMP_GCS_PATH_KEY, gcsPath)
