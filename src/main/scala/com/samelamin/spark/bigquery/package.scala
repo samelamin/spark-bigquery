@@ -3,19 +3,17 @@ package com.samelamin.spark
 import java.math.BigInteger
 
 import com.google.api.services.bigquery.model.TableReference
-import com.google.cloud.hadoop.io.bigquery._
+import com.google.cloud.hadoop.io.bigquery.{AvroBigQueryInputFormat, _}
 import com.google.gson._
+import com.samelamin.spark.bigquery.converters.{BigQueryAdapter, SchemaConverters}
+import org.apache.avro.Schema
+import org.apache.avro.generic.GenericData
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.hadoop.io.{LongWritable, NullWritable}
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat
 import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.{DataFrame, DataFrameWriter, Row, SQLContext}
 import org.slf4j.LoggerFactory
-import org.apache.avro.generic.GenericData
-import com.google.cloud.hadoop.io.bigquery.AvroBigQueryInputFormat
-import com.samelamin.spark.bigquery.converters.{BigQueryAdapter, SchemaConverters}
-import org.apache.avro.Schema
-import scala.util.Random
 
 /**
   * Created by sam elamin on 28/01/2017.
@@ -188,7 +186,7 @@ package object bigquery {
       BigQueryConfiguration.configureBigQueryOutput(hadoopConf, tableName, bigQuerySchema)
       hadoopConf.set("mapreduce.job.outputformat.class", classOf[BigQueryOutputFormat[_, _]].getName)
       val bucket = gcsBucket.getOrElse(hadoopConf.get(BigQueryConfiguration.GCS_BUCKET_KEY))
-      val temp = s"spark-bigquery-${System.currentTimeMillis()}=${Random.nextInt(Int.MaxValue)}"
+      val temp = s"spark-bigquery-${destinationTable.getTableId}"
       val gcsPath = s"gs://$bucket/hadoop/tmp/spark-bigquery/$temp"
       hadoopConf.set(BigQueryConfiguration.TEMP_GCS_PATH_KEY, gcsPath)
       logger.info(s"Loading $gcsPath into $tableName")
