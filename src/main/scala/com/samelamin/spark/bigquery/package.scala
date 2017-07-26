@@ -3,17 +3,19 @@ package com.samelamin.spark
 import java.math.BigInteger
 
 import com.google.api.services.bigquery.model.TableReference
-import com.google.cloud.hadoop.io.bigquery.{AvroBigQueryInputFormat, _}
+import com.google.cloud.hadoop.io.bigquery._
 import com.google.gson._
-import com.samelamin.spark.bigquery.converters.{BigQueryAdapter, SchemaConverters}
-import org.apache.avro.Schema
-import org.apache.avro.generic.GenericData
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.hadoop.io.{LongWritable, NullWritable}
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat
 import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.{DataFrame, DataFrameWriter, Row, SQLContext}
 import org.slf4j.LoggerFactory
+import org.apache.avro.generic.GenericData
+import com.google.cloud.hadoop.io.bigquery.AvroBigQueryInputFormat
+import com.samelamin.spark.bigquery.converters.{BigQueryAdapter, SchemaConverters}
+import org.apache.avro.Schema
+import scala.util.Random
 
 /**
   * Created by sam elamin on 28/01/2017.
@@ -156,10 +158,10 @@ package object bigquery {
                             writeDisposition: WriteDisposition.Value = null,
                             createDisposition: CreateDisposition.Value = null,
                             gcsBucket:Option[String] = None): Unit = {
-      val bucket = self.sparkSession.conf.getOption(s"${fullyQualifiedOutputTableId}.gcs.bucket")
-
+      var bucket = self.sparkSession.conf.getOption(s"${fullyQualifiedOutputTableId}.gcs.bucket")
       if(bucket.isEmpty) {
         self.sparkSession.conf.set(s"${fullyQualifiedOutputTableId}.gcs.bucket", hadoopConf.get(BigQueryConfiguration.GCS_BUCKET_KEY))
+        bucket = self.sparkSession.conf.getOption(s"${fullyQualifiedOutputTableId}.gcs.bucket")
       } else {
         self.sqlContext.setBigQueryGcsBucket(bucket.get)
       }
@@ -185,16 +187,21 @@ package object bigquery {
 
       BigQueryConfiguration.configureBigQueryOutput(hadoopConf, tableName, bigQuerySchema)
       hadoopConf.set("mapreduce.job.outputformat.class", classOf[BigQueryOutputFormat[_, _]].getName)
-      val bucket = gcsBucket.getOrElse(hadoopConf.get(BigQueryConfiguration.GCS_BUCKET_KEY))
-      val temp = s"spark-bigquery-${destinationTable.getTableId}"
+      val bucket = gcsBucket.get
+      val temp = s"spark-bigquery-${System.currentTimeMillis()}=${Random.nextInt(Int.MaxValue)}"
       val gcsPath = s"gs://$bucket/hadoop/tmp/spark-bigquery/$temp"
-      hadoopConf.set(BigQueryConfiguration.TEMP_GCS_PATH_KEY, gcsPath)
+
+
+      if(hadoopConf.get(BigQueryConfiguration.TEMP_GCS_PATH_KEY) == null) {
+        hadoopConf.set(BigQueryConfiguration.TEMP_GCS_PATH_KEY, gcsPath)
+      }
+
       logger.info(s"Loading $gcsPath into $tableName")
       adaptedDf
         .toJSON
         .rdd
         .map(json => (null, jsonParser.parse(json)))
-        .saveAsNewAPIHadoopFile(hadoopConf.get(BigQueryConfiguration.TEMP_GCS_PATH_KEY),
+        .saveAsNewAPIHadoopFile(gcsPath,
           classOf[GsonBigQueryInputFormat],
           classOf[LongWritable],
           classOf[TextOutputFormat[NullWritable, JsonObject]],
