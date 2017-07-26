@@ -64,6 +64,7 @@ package object bigquery {
       */
     def setBigQueryGcsBucket(gcsBucket: String): Unit = {
       hadoopConf.set(BigQueryConfiguration.GCS_BUCKET_KEY, gcsBucket)
+      sqlContext.sparkSession.conf.set(BigQueryConfiguration.GCS_BUCKET_KEY, gcsBucket)
     }
 
     /**
@@ -158,12 +159,6 @@ package object bigquery {
                             writeDisposition: WriteDisposition.Value = null,
                             createDisposition: CreateDisposition.Value = null): Unit = {
       val destinationTable = BigQueryStrings.parseTableReference(fullyQualifiedOutputTableId)
-      val bucketKey = s"${destinationTable.getTableId}.gcs.bucket"
-
-      if(self.sparkSession.conf.getOption(bucketKey).isEmpty) {
-        self.sparkSession.conf.set(bucketKey, hadoopConf.get(BigQueryConfiguration.GCS_BUCKET_KEY))
-      }
-
       val bigQuerySchema = SchemaConverters.SqlToBQSchema(adaptedDf)
       val gcsPath = writeDFToGoogleStorage(adaptedDf,destinationTable,bigQuerySchema)
       bq.load(destinationTable,
@@ -183,8 +178,7 @@ package object bigquery {
 
       BigQueryConfiguration.configureBigQueryOutput(hadoopConf, tableName, bigQuerySchema)
       hadoopConf.set("mapreduce.job.outputformat.class", classOf[BigQueryOutputFormat[_, _]].getName)
-      val bucketKey = s"${destinationTable.getTableId}.gcs.bucket"
-      val bucket = self.sparkSession.conf.getOption(bucketKey).get
+      val bucket = self.sparkSession.conf.get(BigQueryConfiguration.GCS_BUCKET_KEY)
       val temp = s"spark-bigquery-${System.currentTimeMillis()}=${Random.nextInt(Int.MaxValue)}"
       val gcsPath = s"gs://$bucket/hadoop/tmp/spark-bigquery/$temp"
       if(hadoopConf.get(BigQueryConfiguration.TEMP_GCS_PATH_KEY) == null) {
