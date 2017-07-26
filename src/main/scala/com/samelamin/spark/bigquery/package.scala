@@ -158,10 +158,17 @@ package object bigquery {
                             writeDisposition: WriteDisposition.Value = null,
                             createDisposition: CreateDisposition.Value = null,
                             gcsBucket:Option[String] = None): Unit = {
+      val bucket = self.sparkSession.conf.getOption(s"${fullyQualifiedOutputTableId}.gcs.bucket")
+
+      if(bucket.isEmpty) {
+        self.sparkSession.conf.set(s"${fullyQualifiedOutputTableId}.gcs.bucket", hadoopConf.get(BigQueryConfiguration.GCS_BUCKET_KEY))
+      } else {
+        self.sqlContext.setBigQueryGcsBucket(bucket.get)
+      }
 
       val destinationTable = BigQueryStrings.parseTableReference(fullyQualifiedOutputTableId)
       val bigQuerySchema = SchemaConverters.SqlToBQSchema(adaptedDf)
-      val gcsPath = writeDFToGoogleStorage(adaptedDf,destinationTable,bigQuerySchema,gcsBucket)
+      val gcsPath = writeDFToGoogleStorage(adaptedDf,destinationTable,bigQuerySchema,bucket)
       bq.load(destinationTable,
         bigQuerySchema,
         gcsPath,
