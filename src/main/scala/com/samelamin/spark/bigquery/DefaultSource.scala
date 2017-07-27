@@ -32,7 +32,7 @@ class DefaultSource
   override def createSink(sqlContext: SQLContext, parameters: Map[String, String],
                           partitionColumns: Seq[String], outputMode: OutputMode): Sink = {
 
-    val path = parameters.get("path").getOrElse("transaction_log")
+    val path = parameters.get("transaction_log").getOrElse("transaction_log")
     new BigQuerySink(sqlContext.sparkSession, path, parameters)
 
   }

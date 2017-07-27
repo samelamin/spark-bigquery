@@ -27,7 +27,7 @@ package object bigquery {
   implicit class BigQuerySQLContext(sqlContext: SQLContext) extends Serializable {
     lazy val bq = BigQueryClient.getInstance(sqlContext)
     @transient
-    lazy val hadoopConf = sqlContext.sparkContext.hadoopConfiguration
+    lazy val hadoopConf = sqlContext.sparkSession.sparkContext.hadoopConfiguration
     private val logger = LoggerFactory.getLogger(classOf[BigQueryClient])
 
     /**
@@ -62,8 +62,10 @@ package object bigquery {
     /**
       * Set GCS bucket for temporary BigQuery files.
       */
-    def setBigQueryGcsBucket(gcsBucket: String): Unit =
+    def setBigQueryGcsBucket(gcsBucket: String): Unit = {
       hadoopConf.set(BigQueryConfiguration.GCS_BUCKET_KEY, gcsBucket)
+      sqlContext.sparkSession.conf.set(BigQueryConfiguration.GCS_BUCKET_KEY, gcsBucket)
+    }
 
     /**
       * Set BigQuery dataset location, e.g. US, EU.
@@ -91,7 +93,7 @@ package object bigquery {
 
     def bigQuerySelect(sqlQuery: String): DataFrame = {
       bq.selectQuery(sqlQuery)
-      val tableData = sqlContext.sparkContext.newAPIHadoopRDD(
+      val tableData = sqlContext.sparkSession.sparkContext.newAPIHadoopRDD(
         hadoopConf,
         classOf[AvroBigQueryInputFormat],
         classOf[LongWritable],
@@ -138,7 +140,7 @@ package object bigquery {
     private val logger = LoggerFactory.getLogger(classOf[BigQueryClient])
 
     @transient
-    lazy val hadoopConf = self.sqlContext.sparkContext.hadoopConfiguration
+    lazy val hadoopConf = self.sparkSession.sparkContext.hadoopConfiguration
     lazy val bq = BigQueryClient.getInstance(self.sqlContext)
 
     @transient
@@ -156,7 +158,6 @@ package object bigquery {
                             timePartitionExpiration: Long = 0,
                             writeDisposition: WriteDisposition.Value = null,
                             createDisposition: CreateDisposition.Value = null): Unit = {
-
       val destinationTable = BigQueryStrings.parseTableReference(fullyQualifiedOutputTableId)
       val bigQuerySchema = SchemaConverters.SqlToBQSchema(adaptedDf)
       val gcsPath = writeDFToGoogleStorage(adaptedDf,destinationTable,bigQuerySchema)
@@ -177,16 +178,19 @@ package object bigquery {
 
       BigQueryConfiguration.configureBigQueryOutput(hadoopConf, tableName, bigQuerySchema)
       hadoopConf.set("mapreduce.job.outputformat.class", classOf[BigQueryOutputFormat[_, _]].getName)
-      val bucket = hadoopConf.get(BigQueryConfiguration.GCS_BUCKET_KEY)
+      val bucket = self.sparkSession.conf.get(BigQueryConfiguration.GCS_BUCKET_KEY)
       val temp = s"spark-bigquery-${System.currentTimeMillis()}=${Random.nextInt(Int.MaxValue)}"
       val gcsPath = s"gs://$bucket/hadoop/tmp/spark-bigquery/$temp"
-      hadoopConf.set(BigQueryConfiguration.TEMP_GCS_PATH_KEY, gcsPath)
+      if(hadoopConf.get(BigQueryConfiguration.TEMP_GCS_PATH_KEY) == null) {
+        hadoopConf.set(BigQueryConfiguration.TEMP_GCS_PATH_KEY, gcsPath)
+      }
+
       logger.info(s"Loading $gcsPath into $tableName")
       adaptedDf
         .toJSON
         .rdd
         .map(json => (null, jsonParser.parse(json)))
-        .saveAsNewAPIHadoopFile(hadoopConf.get(BigQueryConfiguration.TEMP_GCS_PATH_KEY),
+        .saveAsNewAPIHadoopFile(gcsPath,
           classOf[GsonBigQueryInputFormat],
           classOf[LongWritable],
           classOf[TextOutputFormat[NullWritable, JsonObject]],
