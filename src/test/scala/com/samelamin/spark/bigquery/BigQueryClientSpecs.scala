@@ -70,7 +70,9 @@ class BigQueryClientSpecs extends FeatureSpec with DataFrameSuiteBase with Mocki
     val sqlCtx = sqlContext
     val fullyQualifiedOutputTableId = "testProjectID:test_dataset.test"
     val sqlQuery = s"select * from $fullyQualifiedOutputTableId"
-    sqlContext.setBigQueryProjectId(BQProjectId)
+
+    val bqQueryContext = new BigQuerySQLContext(sqlCtx)
+    bqQueryContext.setBigQueryProjectId(BQProjectId)
     val bigQueryMock =  mock[Bigquery](RETURNS_DEEP_STUBS)
     val bigQueryClient = setupBigQueryClient(sqlCtx, bigQueryMock)
     bigQueryClient.selectQuery(sqlQuery)
