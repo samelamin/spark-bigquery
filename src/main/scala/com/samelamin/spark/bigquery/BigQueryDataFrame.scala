@@ -50,11 +50,6 @@ class BigQueryDataFrame(self: DataFrame) extends Serializable {
     delete(new Path(gcsPath))
   }
 
-
-  def saveAsBigQueryTable2(fullyQualifiedOutputTableId: String): Unit = {
-  saveAsBigQueryTable(fullyQualifiedOutputTableId,false)
-  }
-
   def writeDFToGoogleStorage(adaptedDf: DataFrame,
                              destinationTable: TableReference,
                              bigQuerySchema: String): String = {

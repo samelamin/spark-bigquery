@@ -15,13 +15,9 @@ package object bigquery {
     val WRITE_TRUNCATE, WRITE_APPEND, WRITE_EMPTY = Value
   }
 
-
   implicit def makebigQueryContext(sql: SQLContext): BigQuerySQLContext =
        new BigQuerySQLContext(sql)
 
   implicit def makebigQueryDataFrame(self: DataFrame): BigQueryDataFrame =
     new BigQueryDataFrame(self)
-  def gettest(): String = {
-  "hello world"
-  }
 }

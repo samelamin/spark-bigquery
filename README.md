@@ -5,15 +5,19 @@ spark-bigquery
 
 This Spark module allows saving DataFrame as BigQuery table.
 
-The project was inspired by [spotify/spark-bigquery](https://github.com/spotify/spark-bigquery), but there are several differences:
+The project was inspired by [spotify/spark-bigquery](https://github.com/spotify/spark-bigquery), but there are several differences and enhancements:
 
 * Use of the Structured Streaming API on Spark 2.1
+
+* Use within Pyspark
 
 * Allow saving to partitioned tables
 
 * Easy integration with [Databricks](https://github.com/samelamin/spark-bigquery/blob/master/Databricks.md)
 
 * Use of Standard SQL
+
+* Run Data Manipulation Language Queries [DML](https://cloud.google.com/bigquery/docs/reference/standard-sql/data-manipulation-language)
 
 * Update schemas on writes using the [setSchemaUpdateOptions](https://developers.google.com/resources/api-libraries/documentation/bigquery/v2/java/latest/com/google/api/services/bigquery/model/JobConfigurationQuery.html#setSchemaUpdateOptions(java.util.List))
 
@@ -60,7 +64,7 @@ I created a container that launches zepplin with spark and the connector for eas
   <dependency>
     <groupId>com.github.samelamin</groupId>
     <artifactId>spark-bigquery_${scala.binary.version}</artifactId>
-    <version>0.1.9</version>
+    <version>0.2.2</version>
   </dependency>
 </dependencies>
 ```
@@ -71,7 +75,7 @@ To use it in a local SBT console first add the package as a dependency then set 
 ```sbt
 resolvers += Opts.resolver.sonatypeReleases
 
-libraryDependencies += "com.github.samelamin" %% "spark-bigquery" % "0.1.9"
+libraryDependencies += "com.github.samelamin" %% "spark-bigquery" % "0.2.2"
 ```
 
 ```scala
@@ -132,6 +136,13 @@ val df = ...
 df.saveAsBigQueryTable("project-id:dataset-id.table-name")
 ```
 
+```python
+bq = spark._sc._jvm.com.samelamin.spark.bigquery.BigQuerySQLContext(spark._wrapped._jsqlContext)
+val df = ...
+bqDF = spark._sc._jvm.com.samelamin.spark.bigquery.BigQueryDataFrame(df._jdf)
+bqDF.saveAsBigQueryTable("project-id:dataset-id.table-name")
+```
+
 ### Reading DataFrame From BigQuery
 
 ```scala
@@ -147,6 +158,18 @@ val df = sqlContext.bigQuerySelect(
   "SELECT word, word_count FROM [bigquery-public-data:samples.shakespeare]")
 ```
 
+
+### Running DML Queries
+
+```scala
+import com.samelamin.spark.bigquery._
+
+// Load results from a SQL query
+// Only legacy SQL dialect is supported for now
+sqlContext.runDMLQuery("UPDATE dataset-id.table-name SET test_col = new_value WHERE test_col = old_value")
+```
+Please note that DML queries need to be done using Standard SQL
+
 ### Update Schemas
 
 You can also allow the saving of a dataframe to update a schema:
@@ -159,10 +182,8 @@ sqlContext.setAllowSchemaUpdates()
 
 Notes on using this API:
 
- * Target data set must already exist
  * Structured Streaming needs a partitioned table which is created by default when writing a stream
  * Structured Streaming needs a timestamp column where offsets are retrieved from, by default all tables are created with a `bq_load_timestamp` column with a default value of the current timstamp.
- * Structured Streaming currently does not support schema updates
  * For use with Databricks please follow this [guide](https://github.com/samelamin/spark-bigquery/blob/master/Databricks.md)
 
 # License

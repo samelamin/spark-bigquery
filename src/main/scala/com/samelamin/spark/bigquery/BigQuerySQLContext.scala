@@ -97,6 +97,10 @@ import org.slf4j.LoggerFactory
     sqlContext.createDataFrame(tableData.map(converter), structType)
   }
 
+  def runDMLQuery(runDMLQuery:String):Unit = {
+    bq.runDMLQuery(runDMLQuery)
+  }
+
   def getLatestBQModifiedTime(tableReference: String): Option[BigInteger] = {
     bq.getLatestModifiedTime(BigQueryStrings.parseTableReference(tableReference))
   }
