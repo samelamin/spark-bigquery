@@ -24,7 +24,9 @@ class BigQuerySink(sparkSession: SparkSession, path: String, options: Map[String
     } else {
       val fullyQualifiedOutputTableId = options.get("tableReferenceSink").get
       val isPartitionByDay = Try(options.get("partitionByDay").get.toBoolean).getOrElse(true)
-      data.saveAsBigQueryTable(fullyQualifiedOutputTableId, isPartitionByDay)
+
+      val bqDF = new BigQueryDataFrame(data)
+      bqDF.saveAsBigQueryTable(fullyQualifiedOutputTableId, isPartitionByDay)
       fileLog.writeBatch(batchId)
     }
   }

@@ -70,10 +70,24 @@ class BigQueryClientSpecs extends FeatureSpec with DataFrameSuiteBase with Mocki
     val sqlCtx = sqlContext
     val fullyQualifiedOutputTableId = "testProjectID:test_dataset.test"
     val sqlQuery = s"select * from $fullyQualifiedOutputTableId"
-    sqlContext.setBigQueryProjectId(BQProjectId)
+
+    val bqQueryContext = new BigQuerySQLContext(sqlCtx)
+    bqQueryContext.setBigQueryProjectId(BQProjectId)
     val bigQueryMock =  mock[Bigquery](RETURNS_DEEP_STUBS)
     val bigQueryClient = setupBigQueryClient(sqlCtx, bigQueryMock)
     bigQueryClient.selectQuery(sqlQuery)
+    verify(bigQueryMock.jobs().insert(mockitoEq(BQProjectId),any[Job]), times(1)).execute()
+  }
+
+  scenario("When running a DML Queries") {
+    val sqlCtx = sqlContext
+    val fullyQualifiedOutputTableId = "testProjectID:test_dataset.test"
+    val dmlQuery = s"UPDATE $fullyQualifiedOutputTableId SET test_col = new_value WHERE test_col = old_value"
+    val bqQueryContext = new BigQuerySQLContext(sqlCtx)
+    bqQueryContext.setBigQueryProjectId(BQProjectId)
+    val bigQueryMock =  mock[Bigquery](RETURNS_DEEP_STUBS)
+    val bigQueryClient = setupBigQueryClient(sqlCtx, bigQueryMock)
+    bigQueryClient.runDMLQuery(dmlQuery)
     verify(bigQueryMock.jobs().insert(mockitoEq(BQProjectId),any[Job]), times(1)).execute()
   }
 }

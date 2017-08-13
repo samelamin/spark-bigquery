@@ -120,6 +120,12 @@ class BigQueryClient(sqlContext: SQLContext, var bigquery: Bigquery = null) exte
     val fullyQualifiedInputTableId = BigQueryStrings.toString(tableReference)
     BigQueryConfiguration.configureBigQueryInput(hadoopConf, fullyQualifiedInputTableId)
   }
+  
+  def runDMLQuery(dmlQuery:String): Unit = {
+    logger.info(s"Executing DML Statement $dmlQuery")
+    val job = createQueryJob(dmlQuery, null, dryRun = false,useStandardSQL = true)
+    waitForJob(job)
+  }
 
   private val queryCache: LoadingCache[String, TableReference] =
     CacheBuilder.newBuilder()
@@ -131,10 +137,8 @@ class BigQueryClient(sqlContext: SQLContext, var bigquery: Bigquery = null) exte
         val location = hadoopConf.get(STAGING_DATASET_LOCATION, STAGING_DATASET_LOCATION_DEFAULT)
         val destinationTable = temporaryTable(location)
         logger.info(s"Destination table: $destinationTable")
-        val use_legacy_sql = !hadoopConf.get(USE_STANDARD_SQL_DIALECT,"true").toBoolean
-
-        val job = createQueryJob(sqlQuery, destinationTable, dryRun = false,use_legacy_sql)
-
+        val useStandardSQL = hadoopConf.get(USE_STANDARD_SQL_DIALECT,"false").toBoolean
+        val job = createQueryJob(sqlQuery, destinationTable, dryRun = false,useStandardSQL)
         waitForJob(job)
         destinationTable
       }
@@ -183,19 +187,18 @@ class BigQueryClient(sqlContext: SQLContext, var bigquery: Bigquery = null) exte
 
   private def createQueryJob(sqlQuery: String,
                              destinationTable: TableReference,
-                             dryRun: Boolean,use_legacy_sql: Boolean = false): Job = {
+                             dryRun: Boolean,useStandardSQL: Boolean = false): Job = {
     var queryConfig = new JobConfigurationQuery()
       .setQuery(sqlQuery)
       .setPriority(PRIORITY)
-      .setCreateDisposition("CREATE_IF_NEEDED")
-      .setWriteDisposition("WRITE_EMPTY")
 
-    logger.info(s"Using legacy Sql: $use_legacy_sql")
-
-    queryConfig.setUseLegacySql(use_legacy_sql)
+    logger.info(s"Using legacy Sql: ${!useStandardSQL}")
+    queryConfig.setUseLegacySql(!useStandardSQL)
 
     if (destinationTable != null) {
       queryConfig = queryConfig
+        .setCreateDisposition("CREATE_IF_NEEDED")
+        .setWriteDisposition("WRITE_EMPTY")
         .setDestinationTable(destinationTable)
         .setAllowLargeResults(true)
     }

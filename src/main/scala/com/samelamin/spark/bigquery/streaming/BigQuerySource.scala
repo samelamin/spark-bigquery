@@ -19,14 +19,15 @@ import org.slf4j.LoggerFactory
   val hadoopConfiguration = sqlContext.sparkContext.hadoopConfiguration
   private val logger = LoggerFactory.getLogger(classOf[BigQuerySource])
   val fullyQualifiedOutputTableId = options.get("tableReferenceSource").get
-  val timestampColumn = sqlContext.hadoopConf.get("timestamp_column","bq_load_timestamp")
+  val timestampColumn = hadoopConfiguration.get("timestamp_column","bq_load_timestamp")
   /** Returns the schema of the data from this source */
   override def schema: StructType = {
     BigQuerySource.DEFAULT_SCHEMA
   }
 
   override def getOffset: Option[Offset] = {
-    val lastModified = sqlContext.getLatestBQModifiedTime(fullyQualifiedOutputTableId).getOrElse(BigInteger.ZERO)
+    val bigQuerySQLContext = new BigQuerySQLContext(sqlContext)
+    val lastModified = bigQuerySQLContext.getLatestBQModifiedTime(fullyQualifiedOutputTableId).getOrElse(BigInteger.ZERO)
     logger.info(s"$fullyQualifiedOutputTableId was last updated on ${lastModified.longValue()}")
     Some(LongOffset(lastModified.longValue()))
   }
@@ -52,8 +53,8 @@ import org.slf4j.LoggerFactory
          |  $timestampColumn BETWEEN TIMESTAMP_MILLIS($startIndex) AND TIMESTAMP_MILLIS($endIndex)
          |  AND _PARTITIONTIME BETWEEN TIMESTAMP('$startPartitionTime') AND TIMESTAMP('$endPartitionTime')
          |  """.stripMargin
-
-    val df = sqlContext.bigQuerySelect(query)
+    val bigQuerySQLContext = new BigQuerySQLContext(sqlContext)
+    val df = bigQuerySQLContext.bigQuerySelect(query)
     df
   }
 
