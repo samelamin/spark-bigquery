@@ -7,9 +7,11 @@ This Spark module allows saving DataFrame as BigQuery table.
 
 The project was inspired by [spotify/spark-bigquery](https://github.com/spotify/spark-bigquery), but there are several differences and enhancements:
 
-* Use of the Structured Streaming API on Spark 2.1
+* Use of the Structured Streaming API
 
 * Use within Pyspark
+
+* Saving via Decorators
 
 * Allow saving to partitioned tables
 
@@ -136,6 +138,11 @@ val df = ...
 df.saveAsBigQueryTable("project-id:dataset-id.table-name")
 ```
 
+You can also save to a table decorator by saving to 'dataset-id.table-name$YYYYMMDD'
+
+
+### Saving DataFrame using Pyspark
+
 ```python
 bq = spark._sc._jvm.com.samelamin.spark.bigquery.BigQuerySQLContext(spark._wrapped._jsqlContext)
 val df = ...
@@ -158,6 +165,13 @@ val df = sqlContext.bigQuerySelect(
   "SELECT word, word_count FROM [bigquery-public-data:samples.shakespeare]")
 ```
 
+### Reading DataFrame From BigQuery in Pyspark
+
+```python
+import com.samelamin.spark.bigquery._
+bq = spark._sc._jvm.com.samelamin.spark.bigquery.BigQuerySQLContext(spark._wrapped._jsqlContext)
+df= DataFrame(bq.bigQuerySelect("SELECT word, word_count FROM [bigquery-public-data:samples.shakespeare]"), session._wrapped)
+```
 
 ### Running DML Queries
 
