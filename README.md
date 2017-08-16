@@ -145,7 +145,7 @@ You can also save to a table decorator by saving to 'dataset-id.table-name$YYYYM
 
 ```python
 bq = spark._sc._jvm.com.samelamin.spark.bigquery.BigQuerySQLContext(spark._wrapped._jsqlContext)
-val df = ...
+df = ...
 bqDF = spark._sc._jvm.com.samelamin.spark.bigquery.BigQueryDataFrame(df._jdf)
 bqDF.saveAsBigQueryTable("project-id:dataset-id.table-name")
 ```
@@ -168,7 +168,6 @@ val df = sqlContext.bigQuerySelect(
 ### Reading DataFrame From BigQuery in Pyspark
 
 ```python
-import com.samelamin.spark.bigquery._
 bq = spark._sc._jvm.com.samelamin.spark.bigquery.BigQuerySQLContext(spark._wrapped._jsqlContext)
 df= DataFrame(bq.bigQuerySelect("SELECT word, word_count FROM [bigquery-public-data:samples.shakespeare]"), session._wrapped)
 ```
