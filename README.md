@@ -144,10 +144,23 @@ You can also save to a table decorator by saving to 'dataset-id.table-name$YYYYM
 ### Saving DataFrame using Pyspark
 
 ```python
-bq = spark._sc._jvm.com.samelamin.spark.bigquery.BigQuerySQLContext(spark._wrapped._jsqlContext)
-df = ...
-bqDF = spark._sc._jvm.com.samelamin.spark.bigquery.BigQueryDataFrame(df._jdf)
-bqDF.saveAsBigQueryTable("project-id:dataset-id.table-name")
+BQ_PROJECT_ID = "projectId"
+DATASET_ID = "datasetId"
+jsonFile = "/path/to/json"
+GcsBucket = "gcs-bucket"
+session = SparkSession.builder.getOrCreate()
+bq = session._sc._jvm.com.samelamin.spark.bigquery.BigQuerySQLContext(session._wrapped._jsqlContext)
+bq.setGcpJsonKeyFile(jsonFile)
+bq.setBigQueryProjectId(BQ_PROJECT_ID)
+bq.setGSProjectId(BQ_PROJECT_ID)
+bq.setBigQueryGcsBucket(GcsBucket)
+bq.setBigQueryDatasetLocation("US")
+tableName = "{0}:{1}.{2}".format(BQ_PROJECT_ID,DATASET_ID,TABLE_NAME)
+expiration = session._sc._jvm.java.lang.Long(0)
+create = session._sc._jvm.com.samelamin.spark.bigquery.CreateDisposition.CREATE_IF_NEEDED
+write = session._sc._jvm.com.samelamin.spark.bigquery.WriteDisposition.WRITE_TRUNCATE
+bqDF = session._sc._jvm.com.samelamin.spark.bigquery.BigQueryDataFrame(df._jdf)
+bqDF.saveAsBigQueryTable(tableName, False, 0,None,None)
 ```
 
 ### Reading DataFrame From BigQuery
