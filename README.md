@@ -170,7 +170,8 @@ import com.samelamin.spark.bigquery._
 val table = sqlContext.bigQueryTable("bigquery-public-data:samples.shakespeare")
 
 // Load results from a SQL query
-// Only legacy SQL dialect is supported for now
+// Defaults to legacy SQL dialect
+// To use standard SQL, set  --conf spark.hadoop.USE_STANDARD_SQL_DIALECT=true
 val df = sqlContext.bigQuerySelect(
   "SELECT word, word_count FROM [bigquery-public-data:samples.shakespeare]")
 ```
@@ -188,7 +189,6 @@ df= DataFrame(bq.bigQuerySelect("SELECT word, word_count FROM [bigquery-public-d
 import com.samelamin.spark.bigquery._
 
 // Load results from a SQL query
-// Only legacy SQL dialect is supported for now
 sqlContext.runDMLQuery("UPDATE dataset-id.table-name SET test_col = new_value WHERE test_col = old_value")
 ```
 Please note that DML queries need to be done using Standard SQL
