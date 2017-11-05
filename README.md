@@ -138,26 +138,58 @@ val df = ...
 df.saveAsBigQueryTable("project-id:dataset-id.table-name")
 ```
 
-You can also save to a table decorator by saving to 'dataset-id.table-name$YYYYMMDD'
+You can also save to a table decorator by saving to `dataset-id.table-name$YYYYMMDD`
 
 
 ### Saving DataFrame using Pyspark
 
 ```python
+from pyspark.sql import SparkSession
+
 BQ_PROJECT_ID = "projectId"
 DATASET_ID = "datasetId"
-jsonFile = "/path/to/json"
-GcsBucket = "gcs-bucket"
+TABLE_NAME = "tableName"
+
+KEY_FILE = "/path/to/service_account.json" # When not on GCP
+STAGING_BUCKET = "gcs-bucket"              # Intermediate JSON files
+DATASET_LOCATION = "US"                    # Location for dataset creation
+
+# Start session and reference the JVM package via py4j for convienence
 session = SparkSession.builder.getOrCreate()
-bq = session._sc._jvm.com.samelamin.spark.bigquery.BigQuerySQLContext(session._wrapped._jsqlContext)
-bq.setGcpJsonKeyFile(jsonFile)
+bigquery = session._sc._jvm.com.samelamin.spark.bigquery
+
+# Prepare the bigquery context
+bq = bigquery.BigQuerySQLContext(session._wrapped._jsqlContext)
+bq.setGcpJsonKeyFile(KEY_FILE)
 bq.setBigQueryProjectId(BQ_PROJECT_ID)
 bq.setGSProjectId(BQ_PROJECT_ID)
-bq.setBigQueryGcsBucket(GcsBucket)
-bq.setBigQueryDatasetLocation("US")
-tableName = "{0}:{1}.{2}".format(BQ_PROJECT_ID,DATASET_ID,TABLE_NAME)
-bqDF = session._sc._jvm.com.samelamin.spark.bigquery.BigQueryDataFrame(df._jdf)
-bqDF.saveAsBigQueryTable(tableName, False, 0,None,None)
+bq.setBigQueryGcsBucket(STAGING_BUCKET)
+bq.setBigQueryDatasetLocation(DATASET_LOCATION)
+
+# Extract and Transform a dataframe
+# df = session.read.csv(...)
+
+# Load into a table or table partition
+bqDF = bigquery.BigQueryDataFrame(df._jdf)
+bqDF.saveAsBigQueryTable(
+    "{0}:{1}.{2}".format(BQ_PROJECT_ID, DATASET_ID, TABLE_NAME),
+    False, # Day paritioned when created
+    0,     # Partition expired when created
+    bigquery.__getattr__("package$WriteDisposition$").__getattr__("MODULE$").WRITE_EMPTY(),
+    bigquery.__getattr__("package$CreateDisposition$").__getattr__("MODULE$").CREATE_IF_NEEDED(),
+)
+```
+
+Submit with:
+
+```bash
+pyspark yourjob.py --packages com.github.samelamin:spark-bigquery_2.11:0.2.2
+```
+
+Or
+
+```bash
+gcloud dataproc jobs submit pyspark yourjob.py --properties spark.jars.packages=com.github.samelamin:spark-bigquery_2.11:0.2.2
 ```
 
 ### Reading DataFrame From BigQuery
