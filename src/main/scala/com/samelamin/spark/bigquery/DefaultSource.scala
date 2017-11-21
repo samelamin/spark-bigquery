@@ -60,7 +60,7 @@ class DefaultSource
 override def createRelation(
   sqlContext: SQLContext,
   parameters: Map[String, String]): BigQueryRelation = {
-    val tableName = parameters.get("tableRefrenceSource").get
+    val tableName = parameters.get("tableReferenceSource").get
     new BigQueryRelation(tableName)(sqlContext)
   }
 }
