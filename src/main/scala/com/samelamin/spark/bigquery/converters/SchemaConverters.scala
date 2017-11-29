@@ -86,7 +86,7 @@ object SchemaConverters {
 
   def getTypeName(dataType: String):DataType ={
     dataType match {
-      case "INTEGER" => DoubleType
+      case "INTEGER" => LongType
       case "FLOAT" => FloatType
       case "STRING" => StringType
       case "BYTES" => BinaryType

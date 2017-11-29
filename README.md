@@ -196,17 +196,15 @@ gcloud dataproc jobs submit pyspark yourjob.py --properties spark.jars.packages=
 
 ```scala
 import com.samelamin.spark.bigquery._
+val sqlContext = spark.sqlContext
 
+sqlContext.setBigQueryGcsBucket("bucketname")
+sqlContext.setBigQueryProjectId("projectid")
+sqlContext.setGcpJsonKeyFile("keyfilepath")
+sqlContext.hadoopConf.set("fs.gs.project.id","projectid")
 
-// Load everything from a table
-val table = sqlContext.bigQueryTable("bigquery-public-data:samples.shakespeare")
-
-// Load results from a SQL query
-// Defaults to legacy SQL dialect
-// To use standard SQL, set  --conf spark.hadoop.USE_STANDARD_SQL_DIALECT=true
-val df = sqlContext.bigQuerySelect(
-  "SELECT word, word_count FROM [bigquery-public-data:samples.shakespeare]")
-```
+val df = spark.sqlContext.read.format("com.samelamin.spark.bigquery").option("tableReferenceSource","bigquery-public-data:samples.shakespeare").load()
+``
 
 ### Reading DataFrame From BigQuery in Pyspark
 

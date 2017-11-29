@@ -23,12 +23,14 @@ import org.apache.spark.sql.execution.streaming.{Sink, Source}
 import org.apache.spark.sql.sources._
 import org.apache.spark.sql.streaming.OutputMode
 import org.apache.spark.sql.types.StructType
+import org.apache.spark.sql.sources.RelationProvider
+
 /**
   * The default BigQuery source for Spark SQL.
   */
 class DefaultSource
   extends StreamSinkProvider
-    with StreamSourceProvider {
+    with StreamSourceProvider with RelationProvider{
   override def createSink(sqlContext: SQLContext, parameters: Map[String, String],
                           partitionColumns: Seq[String], outputMode: OutputMode): Sink = {
 
@@ -54,5 +56,11 @@ class DefaultSource
   override def createSource(sqlContext: SQLContext, metadataPath: String,
                             schema: Option[StructType], providerName: String, parameters: Map[String, String]): Source = {
     new BigQuerySource(sqlContext, schema, parameters)
+  }
+override def createRelation(
+  sqlContext: SQLContext,
+  parameters: Map[String, String]): BigQueryRelation = {
+    val tableName = parameters.get("tableReferenceSource").get
+    new BigQueryRelation(tableName)(sqlContext)
   }
 }
