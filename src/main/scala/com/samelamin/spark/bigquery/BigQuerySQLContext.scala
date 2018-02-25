@@ -50,6 +50,10 @@ import org.slf4j.LoggerFactory
     hadoopConf.set("timestamp_column", timestampColumn)
   }
 
+  def setBQTimePartitioningField(timestampColumn: String): Unit = {
+    hadoopConf.set("time_partitioning_column", timestampColumn)
+  }
+
   /**
     * Set GCS bucket for temporary BigQuery files.
     */

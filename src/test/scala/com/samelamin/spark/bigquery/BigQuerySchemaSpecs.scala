@@ -1,5 +1,7 @@
 package com.samelamin.spark.bigquery
 
+import com.google.api.services.bigquery.model.TableSchema
+import com.google.cloud.hadoop.io.bigquery.BigQueryUtils
 import com.holdenkarau.spark.testing.DataFrameSuiteBase
 import org.scalatest.Matchers._
 import org.scalatest.{FeatureSpec, GivenWhenThen}
@@ -17,10 +19,10 @@ class BigQuerySchemaSpecs extends FeatureSpec with GivenWhenThen with DataFrameS
       val df = sqlContext.read.json(sc.parallelize(List(sampleJson)))
 
       When("Passing the schema to the converter")
-      val tableSchema = SchemaConverters.SqlToBQSchema(df)
+      val tableSchema: TableSchema = SchemaConverters.SqlToBQSchema(df)
 
       Then("We should receive a BQ Table Schema")
-      val expectedSchema = """[ {
+      val expectedSchemaString = """[ {
                              |  "name" : "error",
                              |  "mode" : "NULLABLE",
                              |  "type" : "STRING"
@@ -30,6 +32,9 @@ class BigQuerySchemaSpecs extends FeatureSpec with GivenWhenThen with DataFrameS
                              |  "type" : "INTEGER"
                              |} ]
                              |""".stripMargin.trim
+
+
+      val expectedSchema = new TableSchema().setFields(BigQueryUtils.getSchemaFromString(expectedSchemaString))
 
       tableSchema should not be null
       tableSchema should be (expectedSchema)
@@ -77,7 +82,7 @@ class BigQuerySchemaSpecs extends FeatureSpec with GivenWhenThen with DataFrameS
       Then("We should receive a BQ Table Schema")
       tableSchema should not be null
 
-      val expectedSchema = """[ {
+      val expectedSchemaString = """[ {
                              |  "name" : "error",
                              |  "mode" : "NULLABLE",
                              |  "type" : "STRING"
@@ -141,6 +146,7 @@ class BigQuerySchemaSpecs extends FeatureSpec with GivenWhenThen with DataFrameS
                              |  } ]
                              |} ]
                              |""".stripMargin.trim
+      val expectedSchema = new TableSchema().setFields(BigQueryUtils.getSchemaFromString(expectedSchemaString))
       tableSchema should be (expectedSchema)
     }
 
@@ -157,7 +163,7 @@ class BigQuerySchemaSpecs extends FeatureSpec with GivenWhenThen with DataFrameS
 	  val tableSchema = SchemaConverters.SqlToBQSchema(df)
 
       Then("We should receive a BQ Table Schema")
-      val expectedSchema = """[ {
+      val expectedSchemaString = """[ {
                              |  "name" : "event_day",
                              |  "mode" : "NULLABLE",
                              |  "type" : "DATE"
@@ -168,6 +174,7 @@ class BigQuerySchemaSpecs extends FeatureSpec with GivenWhenThen with DataFrameS
                              |} ]
                              |""".stripMargin.trim
 
+      val expectedSchema = new TableSchema().setFields(BigQueryUtils.getSchemaFromString(expectedSchemaString))
       tableSchema should not be null
       tableSchema should be (expectedSchema)
     }

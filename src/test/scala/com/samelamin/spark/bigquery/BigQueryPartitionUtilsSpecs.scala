@@ -11,7 +11,7 @@ import com.holdenkarau.spark.testing.DataFrameSuiteBase
 import com.samelamin.spark.bigquery.converters.{BigQueryAdapter, SchemaConverters}
 import org.apache.commons.io.FileUtils
 import org.apache.spark.sql._
-import org.mockito.Matchers.{any, eq => mockitoEq}
+import org.mockito.Matchers.{any, same, eq => mockitoEq}
 import org.mockito.Mockito._
 import org.scalatest.FeatureSpec
 import org.scalatest.mock.MockitoSugar
@@ -51,8 +51,8 @@ class BigQueryPartitionUtilsSpecs extends FeatureSpec with DataFrameSuiteBase wi
       .thenReturn(jobHandle)
     when(bigQueryMock.jobs().insert(any[String], any[Job]).execute())
       .thenReturn(jobHandle)
-    when(bigQueryMock.tables().insert(any[String], any[String], any[Table]).execute())
-      .thenReturn(table)
+//    when(bigQueryMock.tables().insert(any[String], any[String], any[Table]).execute())
+//      .thenReturn(table)
     when(bigQueryMock.tables().get(any[String], any[String], any[String]).execute())
       .thenThrow(exception)
 
@@ -82,23 +82,57 @@ class BigQueryPartitionUtilsSpecs extends FeatureSpec with DataFrameSuiteBase wi
     val gcsPath = "/tmp/testfile2.json"
     FileUtils.deleteQuietly(new File(gcsPath))
     val adaptedDf = BigQueryAdapter(sc.parallelize(List(1, 2, 3)).toDF)
-    val bigQueryMock =  mock[Bigquery](RETURNS_DEEP_STUBS)
-    val fullyQualifiedOutputTableId = "testProjectID:testDataset.test$20170101"
-    val targetTable = BigQueryStrings.parseTableReference(fullyQualifiedOutputTableId)
-    val bigQueryClient = setupBigQueryClient(sqlCtx, bigQueryMock)
-    val bigQuerySchema = SchemaConverters.SqlToBQSchema(adaptedDf)
+    val bqSchema = SchemaConverters.SqlToBQSchema(adaptedDf)
+    val bqMock =  mock[Bigquery](RETURNS_DEEP_STUBS)
 
-    val cleanTableName = BigQueryStrings
-      .parseTableReference("testProjectID:test_dataset.test")
+    val fullyQualifiedOutputTableId = "testProjectID:testDataset.test"
+    val cleanTableName = BigQueryStrings.parseTableReference(fullyQualifiedOutputTableId)
     val table = new Table()
     table.setTableReference(cleanTableName)
     val timePartitioning = new TimePartitioning()
+    table.setSchema(bqSchema)
+
     timePartitioning.setType("DAY")
     table.setTimePartitioning(timePartitioning)
-    table.setExpirationTime(0l)
+
+    val targetTable = BigQueryStrings.parseTableReference(fullyQualifiedOutputTableId)
+    val bigQueryClient = setupBigQueryClient(sqlCtx, bqMock)
+    val bigQuerySchema = SchemaConverters.SqlToBQSchema(adaptedDf)
+
     bigQueryClient.load(targetTable,bigQuerySchema,gcsPath,true)
 
-    verify(bigQueryMock.jobs().insert(mockitoEq(BQProjectId),any[Job]), times(1)).execute()
-    verify(bigQueryMock.tables().insert("testProjectID","testDataset",table), times(1)).execute()
+    verify(bqMock.jobs().insert(mockitoEq(BQProjectId),any[Job]), times(1)).execute()
+    verify(bqMock.tables(), times(1)).insert("testProjectID","testDataset",table)
+  }
+
+
+  scenario("When writing to a bq with a ingestion-time partitioned column specified") {
+    val sqlCtx = sqlContext
+    import sqlCtx.implicits._
+    val gcsPath = "/tmp/testfile2.json"
+    FileUtils.deleteQuietly(new File(gcsPath))
+    val adaptedDf = BigQueryAdapter(sc.parallelize(List(1, 2, 3)).toDF)
+    val bqSchema = SchemaConverters.SqlToBQSchema(adaptedDf)
+    val bqMock =  mock[Bigquery](RETURNS_DEEP_STUBS)
+
+    val fullyQualifiedOutputTableId = "testProjectID:testDataset.test"
+    val cleanTableName = BigQueryStrings.parseTableReference(fullyQualifiedOutputTableId)
+    val table = new Table()
+    table.setTableReference(cleanTableName)
+    val timePartitioning = new TimePartitioning()
+    table.setSchema(bqSchema)
+
+    timePartitioning.setField("bq_load_timestamp")
+    timePartitioning.setType("DAY")
+    table.setTimePartitioning(timePartitioning)
+
+    val targetTable = BigQueryStrings.parseTableReference(fullyQualifiedOutputTableId)
+    val bigQueryClient = setupBigQueryClient(sqlCtx, bqMock)
+    val bigQuerySchema = SchemaConverters.SqlToBQSchema(adaptedDf)
+
+    bigQueryClient.load(targetTable,bigQuerySchema,gcsPath,true)
+
+    verify(bqMock.jobs().insert(mockitoEq(BQProjectId),any[Job]), times(1)).execute()
+    verify(bqMock.tables(), times(1)).insert("testProjectID","testDataset",table)
   }
 }

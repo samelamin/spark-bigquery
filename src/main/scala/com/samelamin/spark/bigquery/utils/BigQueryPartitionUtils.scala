@@ -2,7 +2,7 @@ package com.samelamin.spark.bigquery.utils
 
 import com.google.api.client.googleapis.json.GoogleJsonResponseException
 import com.google.api.services.bigquery.Bigquery
-import com.google.api.services.bigquery.model.{Table, TableReference, TimePartitioning}
+import com.google.api.services.bigquery.model.{Table, TableReference, TableSchema, TimePartitioning}
 import com.google.cloud.hadoop.io.bigquery.BigQueryStrings
 import org.apache.log4j.LogManager
 
@@ -15,7 +15,10 @@ class BigQueryPartitionUtils(bqService: Bigquery)  {
   private val logger = LogManager.getRootLogger()
   val DEFAULT_TABLE_EXPIRATION_MS = 259200000L
 
-  def createBigQueryPartitionedTable(targetTable: TableReference, timePartitionExpiration: Long = 0): Any = {
+  def createBigQueryPartitionedTable(targetTable: TableReference,
+                                     timePartitionExpiration: Long = 0,
+                                     tableSchema: TableSchema = null,
+                                     timePartitioningField:String = null): Any = {
     val fullyQualifiedOutputTableId = BigQueryStrings.toString(targetTable)
     val decoratorsRegex = ".+?(?=\\$)".r
     val cleanTableName = BigQueryStrings
@@ -32,12 +35,16 @@ class BigQueryPartitionUtils(bqService: Bigquery)  {
       table.setTableReference(cleanTableName)
       val timePartitioning = new TimePartitioning()
       timePartitioning.setType("DAY")
+      // below is for the new bq partitoning feture
+      if(timePartitioningField != null) {
+        timePartitioning.setField(timePartitioningField)
+      }
       table.setTimePartitioning(timePartitioning)
       if (timePartitionExpiration > 0) {
         table.setExpirationTime(timePartitionExpiration)
       }
-      val request = bqService.tables().insert(cleanTableName.getProjectId, cleanTableName.getDatasetId, table)
-      val response = request.execute()
+      table.setSchema(tableSchema)
+      bqService.tables().insert(cleanTableName.getProjectId, cleanTableName.getDatasetId, table).execute()
       logger.info(s"Table $tableId created")
     }
 

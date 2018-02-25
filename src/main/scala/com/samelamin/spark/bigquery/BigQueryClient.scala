@@ -57,7 +57,7 @@ class BigQueryClient(sqlContext: SQLContext, var bigquery: Bigquery = null) exte
   @transient
   lazy val jsonParser = new JsonParser()
   @transient
-  val hadoopConf = sqlContext.sparkContext.hadoopConfiguration
+  val hadoopConfiguration = sqlContext.sparkContext.hadoopConfiguration
   val bqPartitonUtils = new BigQueryPartitionUtils(bigquery)
 
   val STAGING_DATASET_PREFIX = "bq.staging_dataset.prefix"
@@ -68,8 +68,9 @@ class BigQueryClient(sqlContext: SQLContext, var bigquery: Bigquery = null) exte
   val STAGING_DATASET_DESCRIPTION = "Spark BigQuery staging dataset"
   val ALLOW_SCHEMA_UPDATES = "ALLOW_SCHEMA_UPDATES"
   val USE_STANDARD_SQL_DIALECT = "USE_STANDARD_SQL_DIALECT"
+
   private val logger = LoggerFactory.getLogger(classOf[BigQueryClient])
-  private def projectId = hadoopConf.get(BigQueryConfiguration.PROJECT_ID_KEY)
+  private def projectId = hadoopConfiguration.get(BigQueryConfiguration.PROJECT_ID_KEY)
   private def inConsole = Thread.currentThread().getStackTrace.exists(
     _.getClassName.startsWith("scala.tools.nsc.interpreter."))
   private val PRIORITY = if (inConsole) "INTERACTIVE" else "BATCH"
@@ -77,19 +78,22 @@ class BigQueryClient(sqlContext: SQLContext, var bigquery: Bigquery = null) exte
   private val JOB_ID_PREFIX = "spark_bigquery"
 
   def load(destinationTable: TableReference,
-           bigQuerySchema: String,
+           bigQuerySchema: TableSchema,
            gcsPath: String,
            isPartitionedByDay: Boolean = false,
            timePartitionExpiration: Long = 0,
            writeDisposition: WriteDisposition.Value = null,
            createDisposition: CreateDisposition.Value = null): Unit = {
+
+    val timePartitioningColumn = hadoopConfiguration.get("time_partitioning_column")
+
     if(isPartitionedByDay) {
-      bqPartitonUtils.createBigQueryPartitionedTable(destinationTable,timePartitionExpiration)
+      bqPartitonUtils.createBigQueryPartitionedTable(destinationTable,timePartitionExpiration,bigQuerySchema,timePartitioningColumn)
     }
-    val tableSchema = new TableSchema().setFields(BigQueryUtils.getSchemaFromString(bigQuerySchema))
-    val allow_schema_updates = hadoopConf.get(ALLOW_SCHEMA_UPDATES,"false").toBoolean
+
+    val allow_schema_updates = hadoopConfiguration.get(ALLOW_SCHEMA_UPDATES,"false").toBoolean
     var loadConfig = new JobConfigurationLoad()
-      .setSchema(tableSchema)
+      .setSchema(bigQuerySchema)
       .setDestinationTable(destinationTable)
       .setSourceFormat("NEWLINE_DELIMITED_JSON")
       .setSourceUris(List(gcsPath + "/*").asJava)
@@ -118,9 +122,9 @@ class BigQueryClient(sqlContext: SQLContext, var bigquery: Bigquery = null) exte
   def selectQuery(sqlQuery: String): Unit = {
     val tableReference = queryCache.get(sqlQuery)
     val fullyQualifiedInputTableId = BigQueryStrings.toString(tableReference)
-    BigQueryConfiguration.configureBigQueryInput(hadoopConf, fullyQualifiedInputTableId)
+    BigQueryConfiguration.configureBigQueryInput(hadoopConfiguration, fullyQualifiedInputTableId)
   }
-  
+
   def runDMLQuery(dmlQuery:String): Unit = {
     logger.info(s"Executing DML Statement $dmlQuery")
     val job = createQueryJob(dmlQuery, null, dryRun = false,useStandardSQL = true)
@@ -134,10 +138,10 @@ class BigQueryClient(sqlContext: SQLContext, var bigquery: Bigquery = null) exte
       override def load(key: String): TableReference = {
         val sqlQuery = key
         logger.info(s"Executing query $sqlQuery")
-        val location = hadoopConf.get(STAGING_DATASET_LOCATION, STAGING_DATASET_LOCATION_DEFAULT)
+        val location = hadoopConfiguration.get(STAGING_DATASET_LOCATION, STAGING_DATASET_LOCATION_DEFAULT)
         val destinationTable = temporaryTable(location)
         logger.info(s"Destination table: $destinationTable")
-        val useStandardSQL = hadoopConf.get(USE_STANDARD_SQL_DIALECT,"false").toBoolean
+        val useStandardSQL = hadoopConfiguration.get(USE_STANDARD_SQL_DIALECT,"false").toBoolean
         val job = createQueryJob(sqlQuery, destinationTable, dryRun = false,useStandardSQL)
         waitForJob(job)
         destinationTable
@@ -152,7 +156,7 @@ class BigQueryClient(sqlContext: SQLContext, var bigquery: Bigquery = null) exte
 
   private def stagingDataset(location: String): DatasetReference = {
     // Create staging dataset if it does not already exist
-    val prefix = hadoopConf.get(STAGING_DATASET_PREFIX, STAGING_DATASET_PREFIX_DEFAULT)
+    val prefix = hadoopConfiguration.get(STAGING_DATASET_PREFIX, STAGING_DATASET_PREFIX_DEFAULT)
     val datasetId = prefix + location.toLowerCase
     try {
       bigquery.datasets().get(projectId, datasetId).execute()
