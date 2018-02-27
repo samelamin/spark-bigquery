@@ -68,6 +68,7 @@ class BigQueryClient(sqlContext: SQLContext, var bigquery: Bigquery = null) exte
   val STAGING_DATASET_DESCRIPTION = "Spark BigQuery staging dataset"
   val ALLOW_SCHEMA_UPDATES = "ALLOW_SCHEMA_UPDATES"
   val USE_STANDARD_SQL_DIALECT = "USE_STANDARD_SQL_DIALECT"
+  val TIME_PARTITIONING_COLUMN = "time_partitioning_column"
 
   private val logger = LoggerFactory.getLogger(classOf[BigQueryClient])
   private def projectId = hadoopConfiguration.get(BigQueryConfiguration.PROJECT_ID_KEY)
@@ -85,7 +86,7 @@ class BigQueryClient(sqlContext: SQLContext, var bigquery: Bigquery = null) exte
            writeDisposition: WriteDisposition.Value = null,
            createDisposition: CreateDisposition.Value = null): Unit = {
 
-    val timePartitioningColumn = hadoopConfiguration.get("time_partitioning_column")
+    val timePartitioningColumn = hadoopConfiguration.get(TIME_PARTITIONING_COLUMN)
 
     if(isPartitionedByDay) {
       bqPartitonUtils.createBigQueryPartitionedTable(destinationTable,timePartitionExpiration,bigQuerySchema,timePartitioningColumn)

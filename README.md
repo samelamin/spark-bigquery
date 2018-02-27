@@ -19,6 +19,8 @@ The project was inspired by [spotify/spark-bigquery](https://github.com/spotify/
 
 * Use of Standard SQL
 
+* Use Of Time-Ingested Partition Columns
+
 * Run Data Manipulation Language Queries [DML](https://cloud.google.com/bigquery/docs/reference/standard-sql/data-manipulation-language)
 
 * Update schemas on writes using the [setSchemaUpdateOptions](https://developers.google.com/resources/api-libraries/documentation/bigquery/v2/java/latest/com/google/api/services/bigquery/model/JobConfigurationQuery.html#setSchemaUpdateOptions(java.util.List))
@@ -127,6 +129,14 @@ You can also specify a custom timestamp column:
 import com.samelamin.spark.bigquery._
 
 sqlContext.setBQTableTimestampColumn("column_name")
+```
+
+
+You can also specify a custom Time Ingested Partition column: 
+```scala
+import com.samelamin.spark.bigquery._
+
+sqlContext.setBQTimePartitioningField("column_name")
 ```
 
 ### Saving DataFrame using BigQuery Hadoop writer API

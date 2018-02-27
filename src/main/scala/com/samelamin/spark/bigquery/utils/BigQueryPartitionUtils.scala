@@ -35,7 +35,6 @@ class BigQueryPartitionUtils(bqService: Bigquery)  {
       table.setTableReference(cleanTableName)
       val timePartitioning = new TimePartitioning()
       timePartitioning.setType("DAY")
-      // below is for the new bq partitoning feture
       if(timePartitioningField != null) {
         timePartitioning.setField(timePartitioningField)
       }

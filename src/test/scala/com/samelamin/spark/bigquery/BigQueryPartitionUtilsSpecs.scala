@@ -11,7 +11,7 @@ import com.holdenkarau.spark.testing.DataFrameSuiteBase
 import com.samelamin.spark.bigquery.converters.{BigQueryAdapter, SchemaConverters}
 import org.apache.commons.io.FileUtils
 import org.apache.spark.sql._
-import org.mockito.Matchers.{any, same, eq => mockitoEq}
+import org.mockito.Matchers.{any, eq => mockitoEq}
 import org.mockito.Mockito._
 import org.scalatest.FeatureSpec
 import org.scalatest.mock.MockitoSugar
@@ -51,8 +51,6 @@ class BigQueryPartitionUtilsSpecs extends FeatureSpec with DataFrameSuiteBase wi
       .thenReturn(jobHandle)
     when(bigQueryMock.jobs().insert(any[String], any[Job]).execute())
       .thenReturn(jobHandle)
-//    when(bigQueryMock.tables().insert(any[String], any[String], any[Table]).execute())
-//      .thenReturn(table)
     when(bigQueryMock.tables().get(any[String], any[String], any[String]).execute())
       .thenThrow(exception)
 
@@ -108,6 +106,7 @@ class BigQueryPartitionUtilsSpecs extends FeatureSpec with DataFrameSuiteBase wi
 
   scenario("When writing to a bq with a ingestion-time partitioned column specified") {
     val sqlCtx = sqlContext
+    sqlCtx.hadoopConf.set("time_partitioning_column","bq_load_timestamp")
     import sqlCtx.implicits._
     val gcsPath = "/tmp/testfile2.json"
     FileUtils.deleteQuietly(new File(gcsPath))
