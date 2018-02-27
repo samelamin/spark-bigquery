@@ -68,7 +68,7 @@ I created a container that launches zepplin with spark and the connector for eas
   <dependency>
     <groupId>com.github.samelamin</groupId>
     <artifactId>spark-bigquery_${scala.binary.version}</artifactId>
-    <version>0.2.2</version>
+    <version>0.2.4</version>
   </dependency>
 </dependencies>
 ```
@@ -79,7 +79,7 @@ To use it in a local SBT console first add the package as a dependency then set 
 ```sbt
 resolvers += Opts.resolver.sonatypeReleases
 
-libraryDependencies += "com.github.samelamin" %% "spark-bigquery" % "0.2.2"
+libraryDependencies += "com.github.samelamin" %% "spark-bigquery" % "0.2.4"
 ```
 
 ```scala
@@ -193,13 +193,13 @@ bqDF.saveAsBigQueryTable(
 Submit with:
 
 ```bash
-pyspark yourjob.py --packages com.github.samelamin:spark-bigquery_2.11:0.2.2
+pyspark yourjob.py --packages com.github.samelamin:spark-bigquery_2.11:0.2.4
 ```
 
 Or
 
 ```bash
-gcloud dataproc jobs submit pyspark yourjob.py --properties spark.jars.packages=com.github.samelamin:spark-bigquery_2.11:0.2.2
+gcloud dataproc jobs submit pyspark yourjob.py --properties spark.jars.packages=com.github.samelamin:spark-bigquery_2.11:0.2.4
 ```
 
 ### Reading DataFrame From BigQuery
