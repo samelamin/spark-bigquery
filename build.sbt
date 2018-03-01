@@ -31,24 +31,16 @@ libraryDependencies ++= Seq(
   "org.apache.spark" %% "spark-hive" % "2.2.0" % "test",
   "com.databricks" %% "spark-avro" % "4.0.0",
   "com.holdenkarau" %% "spark-testing-base" % "2.2.0_0.8.0" % "test",
-  "com.google.guava" % "guava" % "24.0-jre",
-  "com.google.cloud.bigdataoss" % "gcs-connector" % "1.6.3-hadoop2"
-    exclude ("com.google.guava", "guava-jdk5"),
   "com.google.cloud.bigdataoss" % "bigquery-connector" % "0.11.0-hadoop2"
     exclude ("org.apache.avro", "avro-ipc"),
   "joda-time" % "joda-time" % "2.9.3",
   "org.mockito" % "mockito-core" % "1.8.5" % "test",
   "org.scalatest" %% "scalatest" % "2.2.5" % "test"
 )
-//assemblyShadeRules in assembly := Seq(
-//  ShadeRule.rename("com.google.guava*" -> "shade.com.google.@1").inAll
-//)
 
-//assemblyMergeStrategy in assembly <<= (mergeStrategy in assembly) { (old) => {
-//  case PathList("META-INF", xs@_*) => MergeStrategy.discard
-//  case x => MergeStrategy.first
-//}
-//}
+assemblyShadeRules in assembly := Seq(
+  ShadeRule.rename("com.google.common.**" -> "shade.com.google.@1").inAll
+)
 
 // Release settings
 licenses += "Apache-2.0" -> url("http://opensource.org/licenses/Apache-2.0")
