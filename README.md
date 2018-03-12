@@ -19,6 +19,8 @@ The project was inspired by [spotify/spark-bigquery](https://github.com/spotify/
 
 * Use of Standard SQL
 
+* Use Of Time-Ingested Partition Columns
+
 * Run Data Manipulation Language Queries [DML](https://cloud.google.com/bigquery/docs/reference/standard-sql/data-manipulation-language)
 
 * Update schemas on writes using the [setSchemaUpdateOptions](https://developers.google.com/resources/api-libraries/documentation/bigquery/v2/java/latest/com/google/api/services/bigquery/model/JobConfigurationQuery.html#setSchemaUpdateOptions(java.util.List))
@@ -66,7 +68,7 @@ I created a container that launches zepplin with spark and the connector for eas
   <dependency>
     <groupId>com.github.samelamin</groupId>
     <artifactId>spark-bigquery_${scala.binary.version}</artifactId>
-    <version>0.2.2</version>
+    <version>0.2.4</version>
   </dependency>
 </dependencies>
 ```
@@ -77,7 +79,7 @@ To use it in a local SBT console first add the package as a dependency then set 
 ```sbt
 resolvers += Opts.resolver.sonatypeReleases
 
-libraryDependencies += "com.github.samelamin" %% "spark-bigquery" % "0.2.2"
+libraryDependencies += "com.github.samelamin" %% "spark-bigquery" % "0.2.4"
 ```
 
 ```scala
@@ -127,6 +129,14 @@ You can also specify a custom timestamp column:
 import com.samelamin.spark.bigquery._
 
 sqlContext.setBQTableTimestampColumn("column_name")
+```
+
+
+You can also specify a custom Time Ingested Partition column: 
+```scala
+import com.samelamin.spark.bigquery._
+
+sqlContext.setBQTimePartitioningField("column_name")
 ```
 
 ### Saving DataFrame using BigQuery Hadoop writer API
@@ -183,13 +193,13 @@ bqDF.saveAsBigQueryTable(
 Submit with:
 
 ```bash
-pyspark yourjob.py --packages com.github.samelamin:spark-bigquery_2.11:0.2.2
+pyspark yourjob.py --packages com.github.samelamin:spark-bigquery_2.11:0.2.4
 ```
 
 Or
 
 ```bash
-gcloud dataproc jobs submit pyspark yourjob.py --properties spark.jars.packages=com.github.samelamin:spark-bigquery_2.11:0.2.2
+gcloud dataproc jobs submit pyspark yourjob.py --properties spark.jars.packages=com.github.samelamin:spark-bigquery_2.11:0.2.4
 ```
 
 ### Reading DataFrame From BigQuery

@@ -18,7 +18,9 @@ package com.samelamin.spark.bigquery.converters
  */
 import java.nio.ByteBuffer
 import java.util.HashMap
+
 import com.google.api.services.bigquery.model.{TableFieldSchema, TableSchema}
+import com.google.cloud.hadoop.io.bigquery.BigQueryUtils
 import org.apache.avro.Schema
 import org.apache.avro.Schema.Type._
 import org.apache.avro.generic.GenericData.Fixed
@@ -28,6 +30,7 @@ import org.apache.spark.sql.types._
 import org.json4s.JsonAST.{JArray, JValue}
 import org.json4s.JsonDSL._
 import org.json4s.jackson.JsonMethods.{pretty, render}
+
 import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
 
@@ -80,8 +83,10 @@ object SchemaConverters {
       ("mode" -> getMode(field)) merge
       typeToJson(field, field.dataType)
   }
-  def SqlToBQSchema(df: DataFrame): String = {
-    pretty(render(JArray(df.schema.fields.map(fieldToJson(_)).toList)))
+  def SqlToBQSchema(df: DataFrame): TableSchema = {
+    val stringSchema = pretty(render(JArray(df.schema.fields.map(fieldToJson(_)).toList)))
+    val bqSchema = new TableSchema().setFields(BigQueryUtils.getSchemaFromString(stringSchema))
+    return bqSchema
   }
 
   def getTypeName(dataType: String):DataType ={

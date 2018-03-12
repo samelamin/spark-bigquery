@@ -1,6 +1,6 @@
 package com.samelamin.spark.bigquery
 
-import com.google.api.services.bigquery.model.TableReference
+import com.google.api.services.bigquery.model.{TableReference, TableSchema}
 import com.google.cloud.hadoop.io.bigquery._
 import com.google.gson._
 import com.samelamin.spark.bigquery.converters.{BigQueryAdapter, SchemaConverters}
@@ -52,10 +52,10 @@ class BigQueryDataFrame(self: DataFrame) extends Serializable {
 
   def writeDFToGoogleStorage(adaptedDf: DataFrame,
                              destinationTable: TableReference,
-                             bigQuerySchema: String): String = {
+                             bqSchema: TableSchema): String = {
     val tableName = BigQueryStrings.toString(destinationTable)
 
-    BigQueryConfiguration.configureBigQueryOutput(hadoopConf, tableName, bigQuerySchema)
+    BigQueryConfiguration.configureBigQueryOutput(hadoopConf, tableName, bqSchema.toPrettyString())
     hadoopConf.set("mapreduce.job.outputformat.class", classOf[BigQueryOutputFormat[_, _]].getName)
     val bucket = self.sparkSession.conf.get(BigQueryConfiguration.GCS_BUCKET_KEY)
     val temp = s"spark-bigquery-${System.currentTimeMillis()}=${Random.nextInt(Int.MaxValue)}"
