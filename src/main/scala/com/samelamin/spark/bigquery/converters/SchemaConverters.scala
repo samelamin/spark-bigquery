@@ -50,8 +50,7 @@ object SchemaConverters {
     dataType match {
       case ByteType | ShortType | IntegerType | LongType => "INTEGER"
       case StringType => "STRING"
-      case FloatType => "FLOAT"
-      case DoubleType => "DOUBLE"
+      case FloatType | DoubleType => "DOUBLE"
       case _: DecimalType => "DOUBLE"
       case BinaryType => "BYTES"
       case BooleanType => "BOOLEAN"
@@ -93,7 +92,7 @@ object SchemaConverters {
   def getTypeName(dataType: String):DataType ={
     dataType match {
       case "INTEGER" => LongType
-      case "FLOAT" => FloatType
+      case "FLOAT" => DoubleType
       case "DOUBLE" => DoubleType
       case "STRING" => StringType
       case "BYTES" => BinaryType
@@ -143,7 +142,7 @@ object SchemaConverters {
       case BOOLEAN => SchemaType(BooleanType, nullable = false)
       case BYTES => SchemaType(BinaryType, nullable = false)
       case DOUBLE => SchemaType(DoubleType, nullable = false)
-      case FLOAT => SchemaType(FloatType, nullable = false)
+      case FLOAT => SchemaType(DoubleType, nullable = false)
       case LONG => SchemaType(LongType, nullable = false)
       case FIXED => SchemaType(BinaryType, nullable = false)
       case ENUM => SchemaType(StringType, nullable = false)
