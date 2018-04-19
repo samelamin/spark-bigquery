@@ -50,8 +50,9 @@ object SchemaConverters {
     dataType match {
       case ByteType | ShortType | IntegerType | LongType => "INTEGER"
       case StringType => "STRING"
-      case FloatType | DoubleType => "FLOAT"
-      case _: DecimalType => "FLOAT"
+      case FloatType => "FLOAT"
+      case DoubleType => "DOUBLE"
+      case _: DecimalType => "DOUBLE"
       case BinaryType => "BYTES"
       case BooleanType => "BOOLEAN"
       case TimestampType => "TIMESTAMP"
@@ -93,6 +94,7 @@ object SchemaConverters {
     dataType match {
       case "INTEGER" => LongType
       case "FLOAT" => FloatType
+      case "DOUBLE" => DoubleType
       case "STRING" => StringType
       case "BYTES" => BinaryType
       case "BOOLEAN" => BooleanType

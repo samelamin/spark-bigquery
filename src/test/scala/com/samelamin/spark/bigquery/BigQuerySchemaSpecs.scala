@@ -113,7 +113,7 @@ class BigQuerySchemaSpecs extends FeatureSpec with GivenWhenThen with DataFrameS
                              |    }, {
                              |      "name" : "latitude",
                              |      "mode" : "NULLABLE",
-                             |      "type" : "FLOAT"
+                             |      "type" : "DOUBLE"
                              |    }, {
                              |      "name" : "linkAvatar",
                              |      "mode" : "NULLABLE",
@@ -125,7 +125,7 @@ class BigQuerySchemaSpecs extends FeatureSpec with GivenWhenThen with DataFrameS
                              |    }, {
                              |      "name" : "longitude",
                              |      "mode" : "NULLABLE",
-                             |      "type" : "FLOAT"
+                             |      "type" : "DOUBLE"
                              |    }, {
                              |      "name" : "mainItems",
                              |      "mode" : "NULLABLE",
@@ -170,7 +170,7 @@ class BigQuerySchemaSpecs extends FeatureSpec with GivenWhenThen with DataFrameS
                              |}, {
                              |  "name" : "event_value",
                              |  "mode" : "NULLABLE",
-                             |  "type" : "FLOAT"
+                             |  "type" : "DOUBLE"
                              |} ]
                              |""".stripMargin.trim
 
