@@ -6,4 +6,4 @@ addSbtPlugin("org.scalastyle" % "scalastyle-sbt-plugin" % "0.8.0")
 addSbtPlugin("org.scoverage" % "sbt-scoverage" % "1.3.5")
 addSbtPlugin("org.spark-packages" % "sbt-spark-package" % "0.2.4")
 addSbtPlugin("org.xerial.sbt" % "sbt-sonatype" % "1.1")
-
+addSbtPlugin("io.get-coursier" % "sbt-coursier" % "1.0.1")
