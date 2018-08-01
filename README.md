@@ -214,7 +214,7 @@ sqlContext.setGcpJsonKeyFile("keyfilepath")
 sqlContext.hadoopConf.set("fs.gs.project.id","projectid")
 
 val df = spark.sqlContext.read.format("com.samelamin.spark.bigquery").option("tableReferenceSource","bigquery-public-data:samples.shakespeare").load()
-``
+```
 
 ### Reading DataFrame From BigQuery in Pyspark
 
