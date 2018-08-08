@@ -44,6 +44,9 @@ libraryDependencies ++= Seq(
   "com.databricks" %% "spark-avro" % "4.0.0",
   "com.google.guava" % "guava" % "24.0-jre",
   "com.holdenkarau" %% "spark-testing-base" % "2.3.1_0.10.0" % "test",
+  "com.google.guava" % "guava" % "24.0-jre",
+  "com.google.cloud.bigdataoss" % "gcs-connector" % "1.6.3-hadoop2"
+    exclude ("com.google.guava", "guava-jdk5"),
   "com.google.cloud.bigdataoss" % "bigquery-connector" % "0.11.0-hadoop2"
     exclude ("org.apache.avro", "avro-ipc"),
   "joda-time" % "joda-time" % "2.9.3",
