@@ -115,7 +115,7 @@ import org.slf4j.LoggerFactory
 
 
   /**
-    * Load a BigQuery table as a [[DataFrame]].
+    * Load a BigQuery table as a Dataframe
     */
   def bigQueryTable(tableSpec: String): DataFrame = {
     val tableRef = BigQueryStrings.parseTableReference(tableSpec)
