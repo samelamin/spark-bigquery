@@ -25,14 +25,14 @@ scalaVersion := {
   }
 }
 crossScalaVersions := {
-  if (sparkVersion.value >= "2.3.0") {
+  if (sparkVersion.value >= "2.4.0") {
     Seq("2.11.11")
   } else {
     Seq("2.10.6", "2.11.11")
   }
 }
 spName := "samelamin/spark-bigquery"
-sparkVersion := "2.3.1"
+sparkVersion := "2.4.0"
 sparkComponents := Seq("core", "sql","streaming")
 spAppendScalaVersion := false
 spIncludeMaven := true
@@ -40,10 +40,10 @@ spIgnoreProvided := true
 credentials += Credentials(Path.userHome / ".ivy2" / ".sbtcredentials")
 parallelExecution in Test := false
 libraryDependencies ++= Seq(
-  "org.apache.spark" %% "spark-hive" % "2.3.1" % "test",
+  "org.apache.spark" %% "spark-hive" % "2.4.0" % "test",
   "com.databricks" %% "spark-avro" % "4.0.0",
   "com.google.guava" % "guava" % "24.0-jre",
-  "com.holdenkarau" %% "spark-testing-base" % "2.3.1_0.10.0" % "test",
+  "com.holdenkarau" %% "spark-testing-base" % "2.4.0_0.11.0" % "test",
   "com.google.cloud.bigdataoss" % "bigquery-connector" % "0.11.0-hadoop2"
     exclude ("org.apache.avro", "avro-ipc"),
   "joda-time" % "joda-time" % "2.9.3",
