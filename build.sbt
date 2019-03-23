@@ -44,7 +44,7 @@ libraryDependencies ++= Seq(
   "com.databricks" %% "spark-avro" % "4.0.0",
   "com.google.guava" % "guava" % "24.0-jre",
   "com.holdenkarau" %% "spark-testing-base" % "2.4.0_0.11.0" % "test",
-  "com.google.cloud.bigdataoss" % "bigquery-connector" % "0.11.0-hadoop2"
+  "com.google.cloud.bigdataoss" % "bigquery-connector" % "0.13.4-hadoop2"
     exclude ("org.apache.avro", "avro-ipc"),
   "joda-time" % "joda-time" % "2.9.3",
   "org.mockito" % "mockito-core" % "1.8.5" % "test",
@@ -52,7 +52,7 @@ libraryDependencies ++= Seq(
 )
 
 assemblyShadeRules in assembly := Seq(
-  ShadeRule.rename("com.google.common.**" -> "shade.com.google.@1").inAll
+  ShadeRule.rename("com.google.**" -> "shade.com.google.@1").inAll
 )
 
 // Release settings
