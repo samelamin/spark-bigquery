@@ -42,7 +42,7 @@ parallelExecution in Test := false
 libraryDependencies ++= Seq(
   "org.apache.spark" %% "spark-hive" % "2.4.0" % "test",
   "com.databricks" %% "spark-avro" % "4.0.0",
-  "org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.4",
+  "org.scala-lang" % "scala-library" % "2.10.1",
   "com.holdenkarau" %% "spark-testing-base" % "2.4.0_0.11.0" % "test",
   "com.google.cloud.bigdataoss" % "bigquery-connector" % "0.13.4-hadoop2"
     exclude ("org.apache.avro", "avro-ipc"),
