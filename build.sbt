@@ -19,14 +19,14 @@ name := "spark-bigquery"
 organization := "com.github.samelamin"
 scalaVersion := {
   if (sparkVersion.value >= "2.0.0") {
-    "2.12.4"
+    "2.12.8"
   } else {
     "2.10.6"
   }
 }
 crossScalaVersions := {
   if (sparkVersion.value >= "2.4.0") {
-    Seq("2.12.4")
+    Seq("2.12.8")
   } else {
     Seq("2.10.6", "2.11.11")
   }
