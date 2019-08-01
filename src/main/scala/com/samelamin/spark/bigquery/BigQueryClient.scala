@@ -158,7 +158,7 @@ class BigQueryClient(sqlContext: SQLContext, var bigquery: Bigquery = null) exte
   private def stagingDataset(location: String): DatasetReference = {
     // Create staging dataset if it does not already exist
     val prefix = hadoopConfiguration.get(STAGING_DATASET_PREFIX, STAGING_DATASET_PREFIX_DEFAULT)
-    val datasetId = prefix + location.toLowerCase
+    val datasetId = prefix + location.replace("-", "_").toLowerCase
     try {
       bigquery.datasets().get(projectId, datasetId).execute()
       logger.info(s"Staging dataset $projectId:$datasetId already exists")
