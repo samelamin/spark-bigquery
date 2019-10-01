@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory
 /**
   * Created by samelamin on 12/08/2017.
   */
- class BigQuerySQLContext(sqlContext: SQLContext)  extends Serializable {
+class BigQuerySQLContext(sqlContext: SQLContext) extends Serializable {
   lazy val bq = BigQueryClient.getInstance(sqlContext)
   @transient
   lazy val hadoopConf = sqlContext.sparkSession.sparkContext.hadoopConfiguration
@@ -34,6 +34,7 @@ import org.slf4j.LoggerFactory
   def useStandardSQLDialect(value: Boolean = true): Unit = {
     hadoopConf.set(bq.USE_STANDARD_SQL_DIALECT, value.toString)
   }
+
   /**
     * Set GCP project ID for BigQuery.
     */
@@ -92,16 +93,22 @@ import org.slf4j.LoggerFactory
       hadoopConf,
       classOf[AvroBigQueryInputFormat],
       classOf[LongWritable],
-      classOf[GenericData.Record]).map(x=>x._2)
-    val schemaString = tableData.map(_.getSchema.toString).first()
-    val schema = new Schema.Parser().parse(schemaString)
-    val structType = SchemaConverters.avroToSqlType(schema).dataType.asInstanceOf[StructType]
-    val converter = SchemaConverters.createConverterToSQL(schema)
-      .asInstanceOf[GenericData.Record => Row]
-    sqlContext.createDataFrame(tableData.map(converter), structType)
+      classOf[GenericData.Record]).map(x => x._2)
+
+    val tableDataSchema = tableData.map(_.getSchema.toString)
+    if (tableDataSchema.isEmpty()) {
+      sqlContext.emptyDataFrame
+    } else {
+      val schemaString = tableDataSchema.first()
+      val schema = new Schema.Parser().parse(schemaString)
+      val structType = SchemaConverters.avroToSqlType(schema).dataType.asInstanceOf[StructType]
+      val converter = SchemaConverters.createConverterToSQL(schema)
+        .asInstanceOf[GenericData.Record => Row]
+      sqlContext.createDataFrame(tableData.map(converter), structType)
+    }
   }
 
-  def runDMLQuery(runDMLQuery:String):Unit = {
+  def runDMLQuery(runDMLQuery: String): Unit = {
     bq.runDMLQuery(runDMLQuery)
   }
 
@@ -125,7 +132,7 @@ import org.slf4j.LoggerFactory
       hadoopConf,
       classOf[AvroBigQueryInputFormat],
       classOf[LongWritable],
-      classOf[GenericData.Record]).map(x=>x._2)
+      classOf[GenericData.Record]).map(x => x._2)
     val schemaString = tableData.map(_.getSchema.toString).first()
     val schema = new Schema.Parser().parse(schemaString)
     val structType = SchemaConverters.avroToSqlType(schema).dataType.asInstanceOf[StructType]
