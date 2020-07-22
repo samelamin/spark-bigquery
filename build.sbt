@@ -14,7 +14,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
+import xerial.sbt.Sonatype.SonatypeKeys.sonatypePublishTo
 name := "spark-bigquery"
 organization := "com.github.samelamin"
 scalaVersion := {
@@ -58,6 +58,7 @@ assemblyShadeRules in assembly := Seq(
 licenses += "Apache-2.0" -> url("http://opensource.org/licenses/Apache-2.0")
 releaseCrossBuild             := true
 releasePublishArtifactsAction := PgpKeys.publishSigned.value
+publishTo := sonatypePublishTo.value
 pomExtra                      := {
   <url>https://github.com/samelamin/spark-bigquery</url>
   <scm>
