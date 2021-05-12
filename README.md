@@ -249,6 +249,11 @@ Notes on using this API:
  * Structured Streaming needs a timestamp column where offsets are retrieved from, by default all tables are created with a `bq_load_timestamp` column with a default value of the current timstamp.
  * For use with Databricks please follow this [guide](https://github.com/samelamin/spark-bigquery/blob/master/Databricks.md)
 
+
+#TODO
+
+Need to upgrade spark version
+
 # License
 
 Copyright 2016 samelamin.
